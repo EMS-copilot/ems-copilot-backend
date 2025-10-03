@@ -1,6 +1,7 @@
 package com.ems.copilot.emscopilot.controller;
 
 import com.ems.copilot.emscopilot.dto.request.LoginRequest;
+import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.LoginResponse;
 import com.ems.copilot.emscopilot.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+        return new ApiResponse<>("SUCCESS", "로그인이 성공적으로 처리되었습니다.", response);
     }
 }
