@@ -31,6 +31,9 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    @Column(length = 100)
+    private String department;
+
     @Column(length = 20)
     private String phone;
 
