@@ -1,5 +1,6 @@
 package com.ems.copilot.emscopilot.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -25,6 +26,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String employeeNumber;  // 사번
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 

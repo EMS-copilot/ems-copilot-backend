@@ -1,9 +1,8 @@
 package com.ems.copilot.emscopilot.domain;
 
 public enum UserRole {
-    PARAMEDIC,
-    HOSPITAL_STAFF,
-    SYSTEM_ADMIN,
+    PARAMEDIC, // 구급대원
+    HOSPITAL_STAFF, // 병원스태프
+    PARAMEDIC_ADMIN,
     HOSPITAL_ADMIN,
-    WALL_BOARD
 }

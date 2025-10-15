@@ -24,29 +24,38 @@ public class DataInitializer {
                 List<User> dummyUsers = List.of(
                         // 1. 구급대원(PARAMEDIC) 계정
                         User.builder()
-                                .employeeNumber("00010001")
+                                .employeeNumber("PM11-0001")
                                 .password(passwordEncoder.encode("password"))
                                 .name("김구급")
                                 .role(UserRole.PARAMEDIC)
-                                .department("서울 구급본부")
+                                .department("청주 구급본부")
                                 .build(),
 
-                        // 2. 시스템 관리자(SYSTEM_ADMIN) 계정
+                        // 2. 구급대원 관리자(PARAMEDIC_ADMIN) 계정
                         User.builder()
-                                .employeeNumber("00020001")
+                                .employeeNumber("PA11-0001")
                                 .password(passwordEncoder.encode("password"))
-                                .name("관리자")
-                                .role(UserRole.SYSTEM_ADMIN)
-                                .department("시스템 관리팀")
+                                .name("구급대원 관리자")
+                                .role(UserRole.PARAMEDIC_ADMIN)
+                                .department("청주 구급본부 관리팀")
                                 .build(),
 
                         // 3. 병원 직원(HOSPITAL_STAFF) 계정
                         User.builder()
-                                .employeeNumber("00030001")
+                                .employeeNumber("HS11-0001")
                                 .password(passwordEncoder.encode("password"))
                                 .name("김간호사")
                                 .role(UserRole.HOSPITAL_STAFF)
-                                .department("한양병원")
+                                .department("청주병원")
+                                .build(),
+
+                        // 4. 병원 관리자(HOSPITAL_ADMIN) 계정
+                        User.builder()
+                                .employeeNumber("HA11-0001")
+                                .password(passwordEncoder.encode("password"))
+                                .name("병원 관리자")
+                                .role(UserRole.HOSPITAL_STAFF)
+                                .department("청주병원 관리팀")
                                 .build()
                 );
 
