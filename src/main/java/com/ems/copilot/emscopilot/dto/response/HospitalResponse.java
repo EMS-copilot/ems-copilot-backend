@@ -1,0 +1,37 @@
+package com.ems.copilot.emscopilot.dto.response;
+
+import com.ems.copilot.emscopilot.domain.Hospital;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+@Builder
+public class HospitalResponse {
+    private Long id;
+    private String name;
+    private String address;
+    private Double latitude;
+    private Double longitude;
+    private String phone;
+    private Integer icuBeds;
+    private Integer erBeds;
+    private Boolean specialistOncall;
+    private Integer hospitalCapacity;
+
+    public static HospitalResponse response(Hospital hospital) {
+        return HospitalResponse.builder()
+                .id(hospital.getId())
+                .name(hospital.getName())
+                .address(hospital.getAddress())
+                .latitude(hospital.getLatitude())
+                .longitude(hospital.getLongitude())
+                .phone(hospital.getPhone())
+                .icuBeds(hospital.getIcuBeds())
+                .erBeds(hospital.getErBeds())
+                .specialistOncall(hospital.getSpecialistOncall())
+                .hospitalCapacity(hospital.getHospitalCapacity())
+                .build();
+    }
+}
