@@ -22,6 +22,10 @@ public class Hospital {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Vertex AI용 외부 ID
+    @Column(unique = true, nullable = false)
+    private String externalId;
+
     @Column(nullable = false, length = 200)
     private String name; // 병원명
 
