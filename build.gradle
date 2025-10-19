@@ -30,6 +30,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Apache HttpClient 5 - 전체 의존성 추가
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.1'
+
     // jwt
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
