@@ -17,12 +17,10 @@ public class HospitalResponse {
     private String phone;
     private Integer icuBeds;
     private Integer erBeds;
-    private Integer availableBeds;
     private Boolean specialistOncall;
     private Integer hospitalCapacity;
-    private Boolean status;
 
-    public static HospitalResponse from(Hospital hospital) {
+    public static HospitalResponse response(Hospital hospital) {
         return HospitalResponse.builder()
                 .id(hospital.getId())
                 .name(hospital.getName())
@@ -32,10 +30,8 @@ public class HospitalResponse {
                 .phone(hospital.getPhone())
                 .icuBeds(hospital.getIcuBeds())
                 .erBeds(hospital.getErBeds())
-                .availableBeds(hospital.getAvailableBeds())
                 .specialistOncall(hospital.getSpecialistOncall())
                 .hospitalCapacity(hospital.getHospitalCapacity())
-                .status(hospital.getStatus())
                 .build();
     }
 }

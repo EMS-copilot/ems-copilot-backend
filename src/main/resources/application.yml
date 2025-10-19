@@ -1,6 +1,11 @@
 server:
   port: 8080
 
+vertex:
+  ai:
+    endpoint: ${VERTEX_AI_ENDPOINT}
+    api-key: ${VERTEX_AI_API_KEY}
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ems_copilot?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}

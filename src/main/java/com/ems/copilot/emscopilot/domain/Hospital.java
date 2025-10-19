@@ -22,6 +22,10 @@ public class Hospital {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Vertex AI용 외부 ID
+    @Column(unique = true, nullable = false)
+    private String externalId;
+
     @Column(nullable = false, length = 200)
     private String name; // 병원명
 
@@ -35,15 +39,9 @@ public class Hospital {
     @Column(length = 20)
     private String phone; // 병원 대표전화
 
-    @Min(0)
-    @Max(20)
-    private Integer icuBeds; // ICU 가용 병상 수 (0~20)
+    private Integer icuBeds;
 
-    @Min(0)
-    @Max(20)
-    private Integer erBeds; // 응급실 가용 병상 수 (0~20)
-
-    private Integer availableBeds; // 일반 가용 병상 수
+    private Integer erBeds;
 
     @Column(nullable = false)
     private Boolean specialistOncall; // 전문의 당직 여부
@@ -52,9 +50,6 @@ public class Hospital {
     @Min(0)
     @Max(100)
     private Integer hospitalCapacity; // 병원 수용률 (0~100)
-
-    @Column(nullable = false)
-    private Boolean status;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

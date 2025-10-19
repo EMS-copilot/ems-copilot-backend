@@ -22,13 +22,13 @@ public class HospitalService {
     public List<HospitalResponse> getAllHospitals() {
         List<Hospital> hospitals = hospitalRepository.findAll();
         return hospitals.stream()
-                .map(HospitalResponse::from)
+                .map(HospitalResponse::response)
                 .collect(Collectors.toList());
     }
 
     public HospitalResponse getHospitalById(Long id) {
         Hospital hospital = hospitalRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        return HospitalResponse.from(hospital);
+        return HospitalResponse.response(hospital);
     }
 }
