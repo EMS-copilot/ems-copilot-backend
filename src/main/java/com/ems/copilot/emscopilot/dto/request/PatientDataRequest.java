@@ -46,6 +46,7 @@ public class PatientDataRequest {
     private Double temp;
 
     // 증상
-    @NotBlank(message = "증상은 필수입니다")
+    @NotNull(message = "증상은 필수입니다")
+    @Size(min = 1, message = "최소 1개 이상의 증상을 입력해야 합니다")
     private List<String> symptoms; // "흉통", "호흡곤란" 등
 }
