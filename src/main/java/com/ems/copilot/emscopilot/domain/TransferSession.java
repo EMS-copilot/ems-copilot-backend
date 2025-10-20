@@ -32,7 +32,8 @@ public class TransferSession {
     private String sessionCode; // "P2025-001" 같은거
 
     @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private SessionStatus status;
 
     @ElementCollection
     @CollectionTable(name = "session_chief_complaints",
@@ -41,7 +42,7 @@ public class TransferSession {
     @Builder.Default
     private List<String> chiefComplaint = new ArrayList<>();
 
-    // 5️⃣ 현재 위치 (더미 데이터)
+    // 현재 위치 (더미 데이터)
     @Column(nullable = false)
     private String currentAddress; // "충청북도 음성군 음성읍 중앙로 195"
 

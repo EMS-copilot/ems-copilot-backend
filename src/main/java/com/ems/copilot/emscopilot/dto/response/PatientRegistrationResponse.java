@@ -1,9 +1,6 @@
 package com.ems.copilot.emscopilot.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,16 +18,18 @@ public class PatientRegistrationResponse {
 
     // 세션 정보
     private String sessionId;
-    private String sessionCode; // P2025-001
+    private String sessionCode; // S2025-001
 
-    // 환자 임시 ID
-    private String patientTempId;
+    // 환자 식별 정보
+    private String patientCode;    // PT2025-001 (사람이 읽기 쉬운 코드)
+    private String patientTempId;  // patient_xxx... (시스템 내부 UUID)
 
     private List<RecommendedHospital> recommendedHospitals;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private String status;
 
+    @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor

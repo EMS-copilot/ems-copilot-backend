@@ -18,13 +18,13 @@ public interface TransferSessionRepository extends JpaRepository<TransferSession
 
     /**
      * 해당 연도의 최대 세션 번호 조회
-     * 예: P2025-001 → 1, P2025-002 → 2, P2025-010 → 10
+     * 예: S2025-001 → 1, S2025-002 → 2, S2025-010 → 10
      *
      * @param year "2025" 형식의 연도
      * @return 최대 번호 (없으면 0)
      */
     @Query("SELECT COALESCE(MAX(CAST(SUBSTRING(s.sessionCode, 7) AS int)), 0) " +
             "FROM TransferSession s " +
-            "WHERE s.sessionCode LIKE CONCAT('P', :year, '-%')")
+            "WHERE s.sessionCode LIKE CONCAT('S', :year, '-%')")
     Integer findMaxSessionNumberByYear(@Param("year") String year);
 }
