@@ -17,6 +17,11 @@ public interface TransferSessionRepository extends JpaRepository<TransferSession
     Optional<TransferSession> findBySessionCode(String sessionCode);
 
     /**
+     * 환자 코드로 조회
+     */
+    Optional<TransferSession> findByPatientCode(String patientCode);
+
+    /**
      * 해당 연도의 최대 세션 번호 조회
      * 예: S2025-001 → 1, S2025-002 → 2, S2025-010 → 10
      *

@@ -61,13 +61,17 @@ public class PatientService {
         // 5. TransferSession 생성 및 저장
         TransferSession session = TransferSession.builder()
                 .sessionCode(sessionCode)
+                .patientCode(patientCode)
+                .patientTempId(patientTempId)
                 .status(SessionStatus.PENDING)
-                .chiefComplaint(request.getSymptoms())
                 .currentAddress(currentLocation.getAddress())
                 .currentLatitude(currentLocation.getLatitude())
                 .currentLongitude(currentLocation.getLongitude())
                 .expiresAt(LocalDateTime.now().plusMinutes(30))
                 .build();
+
+        // 주증상 설정 (Builder 후)
+        session.setChiefComplaintList(request.getSymptoms());
 
         session = sessionRepository.save(session);
         log.info("세션 저장 완료 - ID: {}", session.getId());

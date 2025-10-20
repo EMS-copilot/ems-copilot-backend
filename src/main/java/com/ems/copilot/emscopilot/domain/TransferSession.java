@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,28 +26,31 @@ public class TransferSession {
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(columnDefinition = "VARCHAR(36)")
-    private String id; // "a12345687-adf5464-" 이런식으로 온다.
+    private String id;
 
     @Column(unique = true, nullable = false)
-    private String sessionCode; // "P2025-001" 같은거
+    private String sessionCode;
+
+    // 환자 식별 정보
+    @Column(unique = true, nullable = false, length = 50)
+    private String patientCode;
+
+    @Column(nullable = false, length = 100)
+    private String patientTempId;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
 
-    @ElementCollection
-    @CollectionTable(name = "session_chief_complaints",
-            joinColumns = @JoinColumn(name = "session_id"))
-    @Column(name = "complaint")
-    @Builder.Default
-    private List<String> chiefComplaint = new ArrayList<>();
+    @Column(name = "chief_complaints", length = 1000)
+    private String chiefComplaints;
 
     // 현재 위치 (더미 데이터)
     @Column(nullable = false)
-    private String currentAddress; // "충청북도 음성군 음성읍 중앙로 195"
+    private String currentAddress;
 
     @Column(precision = 10, nullable = false)
-    private Double currentLatitude; // 36.9401
+    private Double currentLatitude;
 
     @Column(precision = 10, nullable = false)
     private Double currentLongitude;
@@ -56,11 +59,32 @@ public class TransferSession {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt; // 만료 시간 (30분 후)
+    private LocalDateTime expiresAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    // === 편의 메서드 ===
+
+    /**
+     * List를 쉼표로 구분된 문자열로 저장
+     */
+    public void setChiefComplaintList(List<String> complaints) {
+        this.chiefComplaints = (complaints != null && !complaints.isEmpty())
+            ? String.join(",", complaints)
+            : "";
+    }
+
+    /**
+     * 쉼표로 구분된 문자열을 List로 반환
+     */
+    public List<String> getChiefComplaintList() {
+        if (chiefComplaints == null || chiefComplaints.isEmpty()) {
+            return List.of();
+        }
+        return Arrays.asList(chiefComplaints.split(","));
     }
 
 }
