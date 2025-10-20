@@ -26,4 +26,11 @@ public class HospitalController {
         HospitalResponse hospital = hospitalService.getHospitalById(id);
         return new ApiResponse<>("SUCCESS", "병원 조회가 성공적으로 처리되었습니다.", hospital);
     }
+
+    @GetMapping("/nearby")
+    public ApiResponse<List<HospitalResponse>> getNearbyHospitals(@RequestParam(defaultValue = "10.0") Double distance) {
+        List<HospitalResponse> hospitals = hospitalService.getHospitalByDistance(distance);
+        return new ApiResponse<>("SUCCESS",
+                "거리" + distance + "km 이내 병원 조회가 성공적으로 처리되었습니다.", hospitals);
+    }
 }

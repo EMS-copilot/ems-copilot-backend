@@ -10,27 +10,27 @@ import lombok.Getter;
 @Builder
 public class HospitalResponse {
     private Long id;
+    private String externalId;
+    private Double distance;
+    private Integer eta;
+    private Character rank;
     private String name;
     private String address;
-    private Double latitude;
-    private Double longitude;
-    private String phone;
     private Integer icuBeds;
     private Integer erBeds;
-    private Boolean specialistOncall;
     private Integer hospitalCapacity;
 
     public static HospitalResponse response(Hospital hospital) {
         return HospitalResponse.builder()
                 .id(hospital.getId())
+                .externalId(hospital.getExternalId())
+                .distance(hospital.getDistance())
+                .eta(hospital.getEta())
+                .rank(hospital.getRank())
                 .name(hospital.getName())
                 .address(hospital.getAddress())
-                .latitude(hospital.getLatitude())
-                .longitude(hospital.getLongitude())
-                .phone(hospital.getPhone())
                 .icuBeds(hospital.getIcuBeds())
                 .erBeds(hospital.getErBeds())
-                .specialistOncall(hospital.getSpecialistOncall())
                 .hospitalCapacity(hospital.getHospitalCapacity())
                 .build();
     }

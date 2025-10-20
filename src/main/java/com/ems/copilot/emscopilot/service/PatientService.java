@@ -72,9 +72,7 @@ public class PatientService {
 
         // AI응답을 우리 형식으로 반환
         List<PatientRegistrationResponse.RecommendedHospital> hospitals =
-                convertToRecommendedHospitals(aiResponse,
-                        currentLocation.getLongitude(),
-                        currentLocation.getLongitude());
+                convertToRecommendedHospitals(aiResponse);
 
         return PatientRegistrationResponse.builder()
                 .sessionId(session.getId())
@@ -91,9 +89,7 @@ public class PatientService {
      * Vertex ai 응답 -> 추천 병원 리스트로 변환
      */
     private List<PatientRegistrationResponse.RecommendedHospital> convertToRecommendedHospitals(
-            VertexAIResponse aiResponse,
-            Double currentLatitude,
-            Double currentLongitude) {
+            VertexAIResponse aiResponse) {
         List<PatientRegistrationResponse.RecommendedHospital> result = new ArrayList<>();
         int priority = 1;
 
@@ -108,65 +104,26 @@ public class PatientService {
 
             Hospital hospital = hospitalOpt.get();
 
-            // 거리 계산
-            Double distance = calculateDistance(
-                    currentLatitude,
-                    currentLongitude,
-                    hospital.getLatitude(),
-                    hospital.getLongitude()
-            );
+            Double distance = hospital.getDistance();
 
-            // ETA 계산
-            Integer eta = calculateETA(distance);
+            Integer eta = hospital.getEta();
 
             // 추천 병원 객체 생성
             PatientRegistrationResponse.RecommendedHospital recommendedHospital =
                     PatientRegistrationResponse.RecommendedHospital.builder()
                             .hospitalId(prediction.getHospitalId())
-                            .hospitalDatabaseId(hospital.getId())
                             .hospitalName(hospital.getName())
                             .aiScore(prediction.getScore())
                             .priority(priority++)
                             .aiExplanations(prediction.getExplanations())
                             .distance(distance)
                             .eta(eta)
-                            .availableSpecialties(hospital.getSpecialistOncall())
                             .build();
 
             result.add(recommendedHospital);
         }
         log.info("변환 완료 - 병원 {}개", result.size());
         return result;
-    }
-
-    /**
-     * Haversine 공식으로 두 지점 사이 거리 계산 (km)
-     */
-    private Double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
-        if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
-            return null;
-        }
-
-        final int R = 6371; // 지구 반지름 (km)
-
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return Math.round(R * c * 10.0) / 10.0; // 소수점 1자리
-    }
-
-    /**
-     * 도착 예상 시간 계산 (분)
-     */
-    private Integer calculateETA(Double distanceKm) {
-        if (distanceKm == null) return null;
-        return (int) Math.ceil(distanceKm / 40.0 * 60); // 40km/h 평균 속도
     }
 
     /**
