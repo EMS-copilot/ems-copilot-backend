@@ -4,6 +4,7 @@ import com.ems.copilot.emscopilot.domain.Hospital;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +15,6 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
      * @param externalId "chh_001", "chh_002", "chh_003" 등
      */
     Optional<Hospital> findByExternalId(String externalId);
+
+    List<Hospital> findByDistanceLessThanEqualOrderByDistanceAsc(Double distance);
 }

@@ -31,4 +31,11 @@ public class HospitalService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         return HospitalResponse.response(hospital);
     }
+
+    public List<HospitalResponse> getHospitalByDistance(Double maxDistance) {
+        List<Hospital> hospitals = hospitalRepository.findByDistanceLessThanEqualOrderByDistanceAsc(maxDistance);
+        return hospitals.stream()
+                .map(HospitalResponse::response)
+                .collect(Collectors.toList());
+    }
 }
