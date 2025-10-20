@@ -1,8 +1,10 @@
 package com.ems.copilot.emscopilot.service;
 
 import com.ems.copilot.emscopilot.domain.Hospital;
+import com.ems.copilot.emscopilot.domain.SessionStatus;
 import com.ems.copilot.emscopilot.domain.TransferSession;
 import com.ems.copilot.emscopilot.dto.request.PatientDataRequest;
+import com.ems.copilot.emscopilot.dto.request.VertexAIRequest;
 import com.ems.copilot.emscopilot.dto.response.PatientRegistrationResponse;
 import com.ems.copilot.emscopilot.dto.response.VertexAIResponse;
 import com.ems.copilot.emscopilot.repository.HospitalRepository;
@@ -19,6 +21,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * 환자 등록 시 세션 등록하는 로직 구현
+ */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,35 +37,31 @@ public class PatientService {
 
     @Transactional
     public PatientRegistrationResponse registerPatient(PatientDataRequest request) {
+        // 1. 세션 코드 생성
         String sessionCode = generateSessionCode();
         log.info("세션 코드: {}", sessionCode);
 
+        // 2. 환자 코드 생성
+        String patientCode = generatePatientCode();
+        log.info("환자 코드: {}", patientCode);
+
+        // 3. 환자 임시 ID 생성 (UUID)
         String patientTempId = generatePatientTempId();
         log.info("환자 임시 ID: {}", patientTempId);
 
         String symptomString = String.join(", ", request.getSymptoms());
 
+        // 4. 현재 위치 조회
         LocationService.CurrentLocation currentLocation = locationService.getCurrentLocation();
         log.info("현재 위치: {} ({}, {})",
                 currentLocation.getAddress(),
                 currentLocation.getLatitude(),
                 currentLocation.getLongitude());
 
-        VertexAIResponse aiResponse = vertexAIService.analyzePatient(
-                patientTempId,
-                request.getAge(),
-                request.getSex(),
-                request.getTriageLevel(),
-                request.getSbp(),
-                request.getHr(),
-                symptomString
-        );
-
-        log.info("Vertex AI 응답 받음 - 추천 병원 {}개", aiResponse.getPredictions().size());
-
+        // 5. TransferSession 생성 및 저장
         TransferSession session = TransferSession.builder()
                 .sessionCode(sessionCode)
-                .status("PENDING")
+                .status(SessionStatus.PENDING)
                 .chiefComplaint(request.getSymptoms())
                 .currentAddress(currentLocation.getAddress())
                 .currentLatitude(currentLocation.getLatitude())
@@ -70,18 +72,35 @@ public class PatientService {
         session = sessionRepository.save(session);
         log.info("세션 저장 완료 - ID: {}", session.getId());
 
-        // AI응답을 우리 형식으로 반환
+        // 6. 전체 병원 조회 (Vertex AI가 필터링함)
+        List<Hospital> candidateHospitals = hospitalRepository.findAll();
+        log.info("전체 후보 병원 {}개 조회", candidateHospitals.size());
+
+        // 7. Vertex AI 요청 객체 생성
+        VertexAIRequest aiRequest = buildVertexAIRequest(
+                patientTempId,
+                request,
+                candidateHospitals,
+                symptomString
+        );
+
+        // 8. Vertex AI 호출
+        VertexAIResponse aiResponse = vertexAIService.analyzePatient(aiRequest);
+        log.info("Vertex AI 응답 받음 - 추천 병원 {}개", aiResponse.getPredictions().size());
+
+        // 9. AI응답을 백엔드 형식으로 반환
         List<PatientRegistrationResponse.RecommendedHospital> hospitals =
                 convertToRecommendedHospitals(aiResponse);
 
         return PatientRegistrationResponse.builder()
                 .sessionId(session.getId())
                 .sessionCode(session.getSessionCode())
+                .patientCode(patientCode)
                 .patientTempId(patientTempId)
                 .recommendedHospitals(hospitals)
                 .createdAt(session.getCreatedAt())
                 .expiresAt(session.getExpiresAt())
-                .status(session.getStatus())
+                .status(String.valueOf(session.getStatus()))
                 .build();
     }
 
@@ -127,17 +146,72 @@ public class PatientService {
     }
 
     /**
+     * Vertex AI 요청 객체 생성
+     */
+    private VertexAIRequest buildVertexAIRequest(
+            String patientTempId,
+            PatientDataRequest request,
+            List<Hospital> candidateHospitals,
+            String symptomString) {
+
+        // Patient 정보 구성
+        VertexAIRequest.Patient patient = VertexAIRequest.Patient.builder()
+                .id(patientTempId)
+                .age(request.getAge())
+                .sex(request.getSex())
+                .triageLevel(request.getTriageLevel())
+                .symptom(symptomString)
+                .bpSystolic(request.getSbp())
+                .hr(request.getHr())
+                .build();
+
+        // 후보 병원 리스트 구성
+        List<VertexAIRequest.CandidateHospital> candidates = candidateHospitals.stream()
+                .map(hospital -> VertexAIRequest.CandidateHospital.builder()
+                        .hospitalId(hospital.getExternalId())
+                        .hospitalCapacity(hospital.getHospitalCapacity())
+                        .icuBeds(hospital.getIcuBeds())
+                        .erBeds(hospital.getErBeds())
+                        .distanceKm(hospital.getDistance())
+                        .etaMinutes(hospital.getEta())
+                        .build())
+                .toList();
+
+        // result_method 구성
+        VertexAIRequest.ResultMethod resultMethod = VertexAIRequest.ResultMethod.builder()
+                .topK(5)
+                .build();
+
+        return VertexAIRequest.builder()
+                .patient(patient)
+                .candidateHospitals(candidates)
+                .resultMethod(resultMethod)
+                .build();
+    }
+
+
+    /**
      * 세션 코드 생성
      */
     private String generateSessionCode() {
         String year = String.valueOf(Year.now().getValue());
         Integer maxNum = sessionRepository.findMaxSessionNumberByYear(year);
         int nextNum = (maxNum != null ? maxNum : 0) + 1;
-        return String.format("P%s-%03d", year, nextNum);
+        return String.format("S%s-%03d", year, nextNum);
     }
 
     /**
-     * 환자 임시 ID 생성
+     * 환자 코드 생성
+     */
+    private String generatePatientCode() {
+        String year = String.valueOf(Year.now().getValue());
+        Integer maxNum = sessionRepository.findMaxSessionNumberByYear(year);
+        int nextNum = (maxNum != null ? maxNum : 0) + 1;
+        return String.format("PT%s-%03d", year, nextNum);
+    }
+
+    /**
+     * 환자 임시 ID 생성 (UUID)
      */
     private String generatePatientTempId() {
         return "patient_" + UUID.randomUUID().toString().replace("-", "");
