@@ -9,6 +9,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 환자등록시 프론트에 응답(vertex ai 응답 + db에 저장된 병원 상세 정보 포함)
+ */
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -34,7 +38,6 @@ public class PatientRegistrationResponse {
 
         // 병원 식별
         private String hospitalId; // "CBH_001"
-        private Long hospitalDatabaseId;
         private String hospitalName;
 
         // AI 분석
@@ -45,6 +48,5 @@ public class PatientRegistrationResponse {
         // 병원 상세
         private Double distance;
         private Integer eta;
-        private Boolean availableSpecialties;
     }
 }
