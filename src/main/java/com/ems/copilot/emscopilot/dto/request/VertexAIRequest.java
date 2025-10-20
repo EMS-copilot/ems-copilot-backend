@@ -1,8 +1,12 @@
 package com.ems.copilot.emscopilot.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * vertex ai에게 전송하는 데이터
@@ -10,22 +14,67 @@ import lombok.Data;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class VertexAIRequest {
 
-    @JsonProperty("patient_id")
-    private String patientId;
+    private Patient patient;
 
-    private Integer age;
+    @JsonProperty("candidate_hospitals")
+    private List<CandidateHospital> candidateHospitals;
 
-    private String sex;
+    @JsonProperty("result_method")
+    private ResultMethod resultMethod;
 
-    @JsonProperty("triage_level")
-    private Integer triageLevel;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Patient {
+        private String id;
+        private Integer age;
+        private String sex;
 
-    @JsonProperty("bp_systolic")
-    private Integer bpSystolic;
+        @JsonProperty("triage_level")
+        private Integer triageLevel;
 
-    private Integer hr;
+        private String symptom;
 
-    private String symptom;
+        @JsonProperty("bp_systolic")
+        private Integer bpSystolic;
+
+        private Integer hr;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CandidateHospital {
+        @JsonProperty("hospital_id")
+        private String hospitalId;
+
+        @JsonProperty("hospital_capacity")
+        private Integer hospitalCapacity;
+
+        @JsonProperty("icu_beds")
+        private Integer icuBeds;
+
+        @JsonProperty("er_beds")
+        private Integer erBeds;
+
+        @JsonProperty("distance_km")
+        private Double distanceKm;
+
+        @JsonProperty("eta_minutes")
+        private Integer etaMinutes;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ResultMethod {
+        private Integer topK;
+    }
 }
