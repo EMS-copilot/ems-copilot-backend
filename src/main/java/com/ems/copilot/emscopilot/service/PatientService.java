@@ -1,6 +1,7 @@
 package com.ems.copilot.emscopilot.service;
 
 import com.ems.copilot.emscopilot.domain.Hospital;
+import com.ems.copilot.emscopilot.domain.PatientVitalData;
 import com.ems.copilot.emscopilot.domain.SessionStatus;
 import com.ems.copilot.emscopilot.domain.TransferSession;
 import com.ems.copilot.emscopilot.dto.request.PatientDataRequest;
@@ -34,6 +35,7 @@ public class PatientService {
     private final VertexAIService vertexAIService;
     private final HospitalRepository hospitalRepository;
     private final LocationService locationService;
+    private final SessionStorageService storageService;
 
     @Transactional
     public PatientRegistrationResponse registerPatient(PatientDataRequest request) {
@@ -74,7 +76,25 @@ public class PatientService {
         session.setChiefComplaintList(request.getSymptoms());
 
         session = sessionRepository.save(session);
-        log.info("세션 저장 완료 - ID: {}", session.getId());
+        log.info("TransferSession DB 저장 완료 (바이탈 정보 제외) - ID: {}", session.getId());
+
+        // 5-1. 바이탈 정보는 메모리에만 저장 (DB 저장 안 함)
+        PatientVitalData vitalData = PatientVitalData.builder()
+                .sessionId(session.getId())
+                .age(request.getAge())
+                .sex(request.getSex())
+                .triageLevel(request.getTriageLevel())
+                .sbp(request.getSbp())
+                .dbp(request.getDbp())
+                .hr(request.getHr())
+                .rr(request.getRr())
+                .spo2(request.getSpo2())
+                .temp(request.getTemp())
+                .symptoms(request.getSymptoms())
+                .build();
+
+        storageService.saveVitalData(session.getId(), vitalData);
+        log.info("바이탈 정보 메모리 저장 완료 (DB 저장 안 함)");
 
         // 6. 전체 병원 조회 (Vertex AI가 필터링함)
         List<Hospital> candidateHospitals = hospitalRepository.findAll();
