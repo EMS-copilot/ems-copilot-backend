@@ -9,13 +9,18 @@ import java.time.LocalDateTime;
 
 /**
  * 환자-병원 매칭 완료 기록 (영구 보관)
- * TransferSession은 30분 후 삭제되지만, Encounter는 이송기록 필수 저장해야하는 법에 의해 영구 보관
+ *
+ * 개인정보 보호 원칙:
+ * - 바이탈 정보는 DB에 저장하지 않음 (Redis에서만 임시 사용)
+ * - 최소한의 정보만 저장: 환자 식별, 병원, 이송 정보
+ * - 응급의료법 제50조: 이송 기록 보존 의무 (바이탈 제외)
  */
 
 @Entity
 @Table(name = "encounters")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -50,6 +55,9 @@ public class Encounter {
 
     @Column(nullable = false)
     private Integer triageLevel; // KTAS 1-5
+
+    // 바이탈 정보는 개인정보 보호를 위해 DB에 저장하지 않음
+    // Redis에서만 임시 사용 후 병원 완료 시 삭제
 
     // 이송 정보
     @Column(nullable = false)
