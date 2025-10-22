@@ -1,0 +1,100 @@
+package com.ems.copilot.emscopilot.controller;
+
+import com.ems.copilot.emscopilot.domain.Hospital;
+import com.ems.copilot.emscopilot.domain.HospitalRequest;
+import com.ems.copilot.emscopilot.domain.User;
+import com.ems.copilot.emscopilot.dto.request.HospitalResponseRequest;
+import com.ems.copilot.emscopilot.dto.request.SendToHospitalsRequest;
+import com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse;
+import com.ems.copilot.emscopilot.dto.response.SendToHospitalsResponse;
+import com.ems.copilot.emscopilot.service.TransferRequestService;
+import com.ems.copilot.emscopilot.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+
+
+/**
+ * 병원 요청 관리 컨트롤러
+ */
+@RestController
+@RequestMapping("/api/hospital-requests")
+@RequiredArgsConstructor
+@Slf4j
+public class TransferRequestController {
+
+    private final TransferRequestService transferRequestService;
+    private final UserService userService;
+
+    /**
+     * 선택한 병원들에게 환자 정보 전송
+     *
+     * POST /api/hospital-requests/send
+     */
+    @PostMapping("/send")
+    @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
+    public ResponseEntity<SendToHospitalsResponse> sendToHospitals(
+            @Valid @RequestBody SendToHospitalsRequest request) {
+
+        log.info("==== 병원 전송 요청 ====");
+        log.info("세션 ID: {}", request.getSessionId());
+        log.info("선택한 병원 수: {}", request.getHospitalIds().size());
+        log.info("병원 ID 목록: {}", request.getHospitalIds());
+
+        SendToHospitalsResponse response = transferRequestService.sendToHospitals(request);
+
+        log.info("병원 전송 완료 - 총 {}개 병원에 전송됨", response.getTotalSent());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 병원 응답 처리 (수용/거절) - 세션 기반
+     *
+     * PUT /api/sessions/{sessionId}/hospital-requests/respond
+     */
+    @PutMapping("/sessions/{sessionId}/respond")
+    @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
+    public ResponseEntity<HospitalRequestResponse> respondToRequest(
+            @PathVariable String sessionId,
+            @Valid @RequestBody HospitalResponseRequest request,
+            Authentication authentication) {
+
+        log.info("==== 병원 응답 처리 ====");
+        log.info("세션 ID: {}", sessionId);
+        log.info("응답: {}", request.getResponse());
+        log.info("메시지: {}", request.getMessage());
+
+        // 1. 현재 로그인한 사용자의 병원 ID 조회
+        String employeeNumber = authentication.getName();
+        User currentUser = userService.getCurrentUser(employeeNumber);
+        Hospital hospital = currentUser.getHospital();
+
+        if (hospital == null) {
+            log.error("병원 정보가 없는 사용자 - 사번: {}", employeeNumber);
+            throw new RuntimeException("병원 정보가 없는 사용자입니다.");
+        }
+
+        log.info("병원 ID: {}, 병원명: {}", hospital.getId(), hospital.getName());
+
+        // 2. 병원 응답 처리
+        HospitalRequest updatedRequest = transferRequestService.respondToRequest(
+                sessionId,
+                hospital.getId(),
+                request
+        );
+
+        log.info("병원 응답 처리 완료 - 상태: {}", updatedRequest.getStatus());
+
+        // Entity -> DTO 변환
+        HospitalRequestResponse response = HospitalRequestResponse.from(updatedRequest);
+
+        return ResponseEntity.ok(response);
+    }
+}
