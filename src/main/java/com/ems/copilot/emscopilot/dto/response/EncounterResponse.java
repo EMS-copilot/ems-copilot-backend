@@ -36,8 +36,8 @@ public class EncounterResponse {
     private String sex;
     private Integer triageLevel;
 
-    // 바이탈 정보는 개인정보 보호를 위해 포함하지 않음
-    // Redis에서만 임시 사용, 병원 완료 시 삭제됨
+    // 바이탈 정보 (확정 시에만 포함, 병원에 전달)
+    private VitalInfo vitalInfo;
 
     // 이송 정보
     private String transferLocation;
@@ -59,7 +59,24 @@ public class EncounterResponse {
     private String notes;
 
     /**
-     * Entity -> DTO 변환
+     * 바이탈 정보 내부 클래스
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VitalInfo {
+        private Integer sbp;
+        private Integer dbp;
+        private Integer hr;
+        private Integer rr;
+        private Integer spo2;
+        private Double temp;
+        private java.util.List<String> symptoms;
+    }
+
+    /**
+     * Entity -> DTO 변환 (바이탈 정보 없이)
      */
     public static EncounterResponse from(Encounter entity) {
         return EncounterResponse.builder()
@@ -72,7 +89,7 @@ public class EncounterResponse {
                 .age(entity.getAge())
                 .sex(entity.getSex())
                 .triageLevel(entity.getTriageLevel())
-                // 바이탈 정보 제외 (개인정보 보호)
+                .vitalInfo(null) // 바이탈 정보 없이 변환
                 .transferLocation(entity.getTransferLocation())
                 .transferDistance(entity.getTransferDistance())
                 .transferEta(entity.getTransferEta())
@@ -84,5 +101,14 @@ public class EncounterResponse {
                 .completedAt(entity.getCompletedAt())
                 .notes(entity.getNotes())
                 .build();
+    }
+
+    /**
+     * Entity -> DTO 변환 (바이탈 정보 포함)
+     */
+    public static EncounterResponse fromWithVital(Encounter entity, VitalInfo vitalInfo) {
+        EncounterResponse response = from(entity);
+        response.setVitalInfo(vitalInfo);
+        return response;
     }
 }
