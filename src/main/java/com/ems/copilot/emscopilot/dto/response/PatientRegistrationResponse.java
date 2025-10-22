@@ -17,7 +17,6 @@ import java.util.Map;
 public class PatientRegistrationResponse {
 
     // 세션 정보
-    private String sessionId;
     private String sessionCode; // S2025-001
 
     // 환자 식별 정보

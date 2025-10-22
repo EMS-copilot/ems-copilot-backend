@@ -27,7 +27,7 @@ public class EncounterService {
      * 최종 병원 확정 (Encounter 생성)
      *
      * @param request 병원 요청 ID
-     * @return 생성된 Encounter
+     * @return 생성된 Encounter (바이탈 정보는 별도로 조회 필요)
      */
     @Transactional
     public Encounter confirmEncounter(ConfirmEncounterRequest request) {
@@ -51,18 +51,18 @@ public class EncounterService {
             throw new RuntimeException("요청이 만료되었습니다. (30분 경과)");
         }
 
-        String sessionId = hospitalRequest.getSessionId();
+        String sessionCode = hospitalRequest.getSessionCode();
 
         // 4. Redis에서 바이탈 정보 조회 (확인용 - DB에는 저장하지 않음)
-        PatientVitalData vitalData = storageService.getVitalData(sessionId)
+        PatientVitalData vitalData = storageService.getVitalData(sessionCode)
                 .orElseThrow(() -> new RuntimeException("바이탈 정보를 찾을 수 없습니다. 만료되었거나 존재하지 않습니다."));
 
         log.info("바이탈 정보 조회 성공 (DB 저장 안 함, Redis에만 유지) - age: {}, sex: {}, triageLevel: {}",
                 vitalData.getAge(), vitalData.getSex(), vitalData.getTriageLevel());
 
         // 5. TransferSession 조회 (환자 코드, 세션 코드 가져오기)
-        TransferSession session = transferSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다. ID: " + sessionId));
+        TransferSession session = transferSessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다. 세션 코드: " + sessionCode));
 
         // 6. Encounter 생성 (개인정보 최소화 - 바이탈은 DB에 저장하지 않음)
         Encounter encounter = Encounter.builder()

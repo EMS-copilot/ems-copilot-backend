@@ -80,7 +80,7 @@ public class PatientService {
 
         // 5-1. 바이탈 정보는 메모리에만 저장 (DB 저장 안 함)
         PatientVitalData vitalData = PatientVitalData.builder()
-                .sessionId(session.getId())
+                .sessionId(session.getSessionCode())
                 .age(request.getAge())
                 .sex(request.getSex())
                 .triageLevel(request.getTriageLevel())
@@ -93,7 +93,7 @@ public class PatientService {
                 .symptoms(request.getSymptoms())
                 .build();
 
-        storageService.saveVitalData(session.getId(), vitalData);
+        storageService.saveVitalData(session.getSessionCode(), vitalData);
         log.info("바이탈 정보 메모리 저장 완료 (DB 저장 안 함)");
 
         // 6. 전체 병원 조회 (Vertex AI가 필터링함)
@@ -117,7 +117,6 @@ public class PatientService {
                 convertToRecommendedHospitals(aiResponse);
 
         return PatientRegistrationResponse.builder()
-                .sessionId(session.getId())
                 .sessionCode(session.getSessionCode())
                 .patientCode(patientCode)
                 .patientTempId(patientTempId)

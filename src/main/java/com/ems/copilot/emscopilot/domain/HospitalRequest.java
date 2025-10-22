@@ -35,7 +35,7 @@ public class HospitalRequest {
 
     // 세션 정보
     @Column(nullable = false, length = 50)
-    private String sessionId; // Redis에서 바이탈 정보 조회용
+    private String sessionCode; // Redis에서 바이탈 정보 조회용
 
     // 병원 정보
     @ManyToOne(fetch = FetchType.LAZY)

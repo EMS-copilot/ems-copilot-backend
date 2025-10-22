@@ -25,7 +25,7 @@ import java.util.List;
 public class HospitalRequestResponse {
 
     private Long id;
-    private String sessionId;
+    private String sessionCode;
 
     // 병원 정보
     private Long hospitalId;
@@ -55,7 +55,7 @@ public class HospitalRequestResponse {
 
         return HospitalRequestResponse.builder()
                 .id(entity.getId())
-                .sessionId(entity.getSessionId())
+                .sessionCode(entity.getSessionCode())
                 .hospitalId(entity.getHospital().getId())
                 .hospitalName(entity.getHospital().getName())
                 .age(entity.getAge())
