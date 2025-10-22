@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SendToHospitalsResponse {
 
-    private String sessionId;
+    private String sessionCode;
     private int totalSent; // 전송한 병원 수
 
     // 환자 바이탈 정보 (프론트엔드 확인용)

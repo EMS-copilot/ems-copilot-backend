@@ -43,7 +43,7 @@ public class TransferRequestController {
             @Valid @RequestBody SendToHospitalsRequest request) {
 
         log.info("==== 병원 전송 요청 ====");
-        log.info("세션 ID: {}", request.getSessionId());
+        log.info("세션 코드: {}", request.getSessionCode());
         log.info("선택한 병원 수: {}", request.getHospitalIds().size());
         log.info("병원 ID 목록: {}", request.getHospitalIds());
 
@@ -57,17 +57,17 @@ public class TransferRequestController {
     /**
      * 병원 응답 처리 (수용/거절) - 세션 기반
      *
-     * PUT /api/sessions/{sessionId}/hospital-requests/respond
+     * PUT /api/hospital-requests/sessions/{sessionCode}/respond
      */
-    @PutMapping("/sessions/{sessionId}/respond")
+    @PutMapping("/sessions/{sessionCode}/respond")
     @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
     public ResponseEntity<HospitalRequestResponse> respondToRequest(
-            @PathVariable String sessionId,
+            @PathVariable String sessionCode,
             @Valid @RequestBody HospitalResponseRequest request,
             Authentication authentication) {
 
         log.info("==== 병원 응답 처리 ====");
-        log.info("세션 ID: {}", sessionId);
+        log.info("세션 코드: {}", sessionCode);
         log.info("응답: {}", request.getResponse());
         log.info("메시지: {}", request.getMessage());
 
@@ -85,7 +85,7 @@ public class TransferRequestController {
 
         // 2. 병원 응답 처리
         HospitalRequest updatedRequest = transferRequestService.respondToRequest(
-                sessionId,
+                sessionCode,
                 hospital.getId(),
                 request
         );

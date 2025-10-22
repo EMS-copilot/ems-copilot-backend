@@ -18,8 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 public class SendToHospitalsRequest {
 
-    @NotBlank(message = "세션 ID는 필수입니다")
-    private String sessionId;
+    @NotBlank(message = "세션 코드는 필수입니다")
+    private String sessionCode;
 
     @NotEmpty(message = "최소 1개 이상의 병원을 선택해야 합니다")
     private List<Long> hospitalIds; // 선택한 병원 ID 목록

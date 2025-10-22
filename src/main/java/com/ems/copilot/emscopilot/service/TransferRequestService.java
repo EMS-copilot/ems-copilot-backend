@@ -33,18 +33,18 @@ public class TransferRequestService {
     /**
      * 선택한 병원들에게 환자 정보 전송
      *
-     * @param request 세션 ID와 선택한 병원 ID 목록
+     * @param request 세션 코드와 선택한 병원 ID 목록
      * @return 전송 결과
      */
     @Transactional
     public SendToHospitalsResponse sendToHospitals(SendToHospitalsRequest request) {
-        String sessionId = request.getSessionId();
+        String sessionCode = request.getSessionCode();
         List<Long> hospitalIds = request.getHospitalIds();
 
-        log.info("병원 전송 시작 - 세션 ID: {}, 병원 수: {}", sessionId, hospitalIds.size());
+        log.info("병원 전송 시작 - 세션 코드: {}, 병원 수: {}", sessionCode, hospitalIds.size());
 
         // 1. Redis에서 바이탈 정보 조회
-        PatientVitalData vitalData = storageService.getVitalData(sessionId)
+        PatientVitalData vitalData = storageService.getVitalData(sessionCode)
                 .orElseThrow(() -> new RuntimeException("세션 정보를 찾을 수 없습니다. 만료되었거나 존재하지 않습니다."));
 
         log.info("바이탈 정보 조회 성공 - 나이: {}, 성별: {}, KTAS: {}",
@@ -70,7 +70,7 @@ public class TransferRequestService {
 
             // HospitalRequest 생성
             HospitalRequest hospitalRequest = HospitalRequest.builder()
-                    .sessionId(sessionId)
+                    .sessionCode(sessionCode)
                     .hospital(hospital)
                     .age(vitalData.getAge())
                     .sex(vitalData.getSex())
@@ -111,7 +111,7 @@ public class TransferRequestService {
                 .build();
 
         return SendToHospitalsResponse.builder()
-                .sessionId(sessionId)
+                .sessionCode(sessionCode)
                 .totalSent(results.size())
                 .patientVital(vitalInfo)
                 .requests(results)
@@ -121,22 +121,22 @@ public class TransferRequestService {
     /**
      * 병원 응답 처리 (수용/거절) - 세션 기반
      *
-     * @param sessionId 세션 ID
+     * @param sessionCode 세션 코드
      * @param hospitalId 병원 ID (현재 로그인한 병원)
      * @param responseRequest 응답 (ACCEPTED/REJECTED)
      * @return 업데이트된 HospitalRequest
      */
     @Transactional
-    public HospitalRequest respondToRequest(String sessionId, Long hospitalId, HospitalResponseRequest responseRequest) {
-        log.info("병원 응답 처리 시작 - 세션 ID: {}, 병원 ID: {}, 응답: {}",
-                sessionId, hospitalId, responseRequest.getResponse());
+    public HospitalRequest respondToRequest(String sessionCode, Long hospitalId, HospitalResponseRequest responseRequest) {
+        log.info("병원 응답 처리 시작 - 세션 코드: {}, 병원 ID: {}, 응답: {}",
+                sessionCode, hospitalId, responseRequest.getResponse());
 
-        // 1. 세션 ID와 병원 ID로 PENDING 상태의 HospitalRequest 조회
-        HospitalRequest hospitalRequest = requestRepository.findBySessionIdAndHospitalIdAndStatus(
-                sessionId, hospitalId, RequestStatus.PENDING)
+        // 1. 세션 코드와 병원 ID로 PENDING 상태의 HospitalRequest 조회
+        HospitalRequest hospitalRequest = requestRepository.findBySessionCodeAndHospitalIdAndStatus(
+                sessionCode, hospitalId, RequestStatus.PENDING)
                 .orElseThrow(() -> new RuntimeException(
-                        String.format("응답 가능한 병원 요청을 찾을 수 없습니다. (이미 응답했거나 존재하지 않음) 세션 ID: %s, 병원 ID: %d",
-                                sessionId, hospitalId)));
+                        String.format("응답 가능한 병원 요청을 찾을 수 없습니다. (이미 응답했거나 존재하지 않음) 세션 코드: %s, 병원 ID: %d",
+                                sessionCode, hospitalId)));
 
         // 2. 만료 체크
         if (hospitalRequest.isExpired()) {
