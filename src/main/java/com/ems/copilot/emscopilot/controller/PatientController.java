@@ -1,12 +1,12 @@
 package com.ems.copilot.emscopilot.controller;
 
 import com.ems.copilot.emscopilot.dto.request.PatientDataRequest;
+import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.PatientRegistrationResponse;
 import com.ems.copilot.emscopilot.service.PatientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +27,7 @@ public class PatientController {
      */
     @PostMapping("/register")
     @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
-    public ResponseEntity<PatientRegistrationResponse> registerPatient(
+    public ResponseEntity<ApiResponse<PatientRegistrationResponse>> registerPatient(
             @Valid @RequestBody PatientDataRequest request){
         log.info("==== 환자 정보 등록 요청 ====");
         log.info("나이: {}, 성별; {}, KTAS: {}", request.getAge(), request.getSex(), request.getTriageLevel());
@@ -37,9 +37,16 @@ public class PatientController {
                 request.getRr(), request.getSpo2(), request.getTemp());
 
         // 서비스 호출
-        PatientRegistrationResponse response = patientService.registerPatient(request);
+        PatientRegistrationResponse data = patientService.registerPatient(request);
 
-        log.info("환자 등록 완료 - 세션 코드: {}", response.getSessionCode());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        log.info("환자 등록 완료 - 세션 코드: {}", data.getSessionCode());
+
+        ApiResponse<PatientRegistrationResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                "환자 정보가 성공적으로 등록되었습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -2,6 +2,8 @@ package com.ems.copilot.emscopilot.service;
 
 import com.ems.copilot.emscopilot.domain.*;
 import com.ems.copilot.emscopilot.dto.request.ConfirmEncounterRequest;
+import com.ems.copilot.emscopilot.exception.CustomException;
+import com.ems.copilot.emscopilot.exception.ErrorCode;
 import com.ems.copilot.emscopilot.repository.EncounterRepository;
 import com.ems.copilot.emscopilot.repository.HospitalRequestRepository;
 import com.ems.copilot.emscopilot.repository.TransferSessionRepository;
@@ -37,32 +39,32 @@ public class EncounterService {
 
         // 1. HospitalRequest 조회
         HospitalRequest hospitalRequest = hospitalRequestRepository.findById(hospitalRequestId)
-                .orElseThrow(() -> new RuntimeException("병원 요청을 찾을 수 없습니다. ID: " + hospitalRequestId));
+                .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_REQUEST_NOT_FOUND));
 
         // 2. ACCEPTED 상태 확인
         if (hospitalRequest.getStatus() != RequestStatus.ACCEPTED) {
-            throw new RuntimeException("수용된 병원만 확정할 수 있습니다. 현재 상태: " + hospitalRequest.getStatus());
+            throw new CustomException(ErrorCode.INVALID_REQUEST_STATUS);
         }
 
         // 3. 만료 체크
         if (hospitalRequest.isExpired()) {
             hospitalRequest.setStatus(RequestStatus.EXPIRED);
             hospitalRequestRepository.save(hospitalRequest);
-            throw new RuntimeException("요청이 만료되었습니다. (30분 경과)");
+            throw new CustomException(ErrorCode.HOSPITAL_REQUEST_EXPIRED);
         }
 
         String sessionCode = hospitalRequest.getSessionCode();
 
         // 4. Redis에서 바이탈 정보 조회 (확인용 - DB에는 저장하지 않음)
         PatientVitalData vitalData = storageService.getVitalData(sessionCode)
-                .orElseThrow(() -> new RuntimeException("바이탈 정보를 찾을 수 없습니다. 만료되었거나 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.VITAL_DATA_NOT_FOUND));
 
         log.info("바이탈 정보 조회 성공 (DB 저장 안 함, Redis에만 유지) - age: {}, sex: {}, triageLevel: {}",
                 vitalData.getAge(), vitalData.getSex(), vitalData.getTriageLevel());
 
         // 5. TransferSession 조회 (환자 코드, 세션 코드 가져오기)
         TransferSession session = transferSessionRepository.findBySessionCode(sessionCode)
-                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다. 세션 코드: " + sessionCode));
+                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
 
         // 6. Encounter 생성 (개인정보 최소화 - 바이탈은 DB에 저장하지 않음)
         Encounter encounter = Encounter.builder()
@@ -114,11 +116,11 @@ public class EncounterService {
 
         // 1. Encounter 조회
         Encounter encounter = encounterRepository.findById(encounterId)
-                .orElseThrow(() -> new RuntimeException("Encounter를 찾을 수 없습니다. ID: " + encounterId));
+                .orElseThrow(() -> new CustomException(ErrorCode.ENCOUNTER_NOT_FOUND));
 
         // 2. 상태 확인
         if (encounter.getStatus() == EncounterStatus.COMPLETED) {
-            throw new RuntimeException("이미 완료된 Encounter입니다.");
+            throw new CustomException(ErrorCode.ENCOUNTER_ALREADY_COMPLETED);
         }
 
         // 3. 상태 업데이트
