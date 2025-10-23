@@ -4,6 +4,8 @@ import com.ems.copilot.emscopilot.domain.*;
 import com.ems.copilot.emscopilot.dto.request.HospitalResponseRequest;
 import com.ems.copilot.emscopilot.dto.request.SendToHospitalsRequest;
 import com.ems.copilot.emscopilot.dto.response.SendToHospitalsResponse;
+import com.ems.copilot.emscopilot.exception.CustomException;
+import com.ems.copilot.emscopilot.exception.ErrorCode;
 import com.ems.copilot.emscopilot.repository.HospitalRepository;
 import com.ems.copilot.emscopilot.repository.HospitalRequestRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,7 +47,7 @@ public class TransferRequestService {
 
         // 1. Redis에서 바이탈 정보 조회
         PatientVitalData vitalData = storageService.getVitalData(sessionCode)
-                .orElseThrow(() -> new RuntimeException("세션 정보를 찾을 수 없습니다. 만료되었거나 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.VITAL_DATA_NOT_FOUND));
 
         log.info("바이탈 정보 조회 성공 - 나이: {}, 성별: {}, KTAS: {}",
                 vitalData.getAge(), vitalData.getSex(), vitalData.getTriageLevel());
@@ -56,7 +58,7 @@ public class TransferRequestService {
         for (Long hospitalId : hospitalIds) {
             // 병원 조회
             Hospital hospital = hospitalRepository.findById(hospitalId)
-                    .orElseThrow(() -> new RuntimeException("병원을 찾을 수 없습니다. ID: " + hospitalId));
+                    .orElseThrow(() -> new CustomException(ErrorCode.HOSPITAL_NOT_FOUND));
 
             // 증상 리스트를 JSON 문자열로 변환
             String symptomsJson = null;
@@ -134,20 +136,18 @@ public class TransferRequestService {
         // 1. 세션 코드와 병원 ID로 PENDING 상태의 HospitalRequest 조회
         HospitalRequest hospitalRequest = requestRepository.findBySessionCodeAndHospitalIdAndStatus(
                 sessionCode, hospitalId, RequestStatus.PENDING)
-                .orElseThrow(() -> new RuntimeException(
-                        String.format("응답 가능한 병원 요청을 찾을 수 없습니다. (이미 응답했거나 존재하지 않음) 세션 코드: %s, 병원 ID: %d",
-                                sessionCode, hospitalId)));
+                .orElseThrow(() -> new CustomException(ErrorCode.NO_PENDING_REQUEST));
 
         // 2. 만료 체크
         if (hospitalRequest.isExpired()) {
             hospitalRequest.setStatus(RequestStatus.EXPIRED);
             requestRepository.save(hospitalRequest);
-            throw new RuntimeException("요청이 만료되었습니다. (30분 경과)");
+            throw new CustomException(ErrorCode.HOSPITAL_REQUEST_EXPIRED);
         }
 
         // 3. 이미 응답했는지 체크
         if (hospitalRequest.getStatus() != RequestStatus.PENDING) {
-            throw new RuntimeException("이미 응답한 요청입니다. 현재 상태: " + hospitalRequest.getStatus());
+            throw new CustomException(ErrorCode.ALREADY_RESPONDED);
         }
 
         // 4. 응답 처리

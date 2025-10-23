@@ -3,13 +3,13 @@ package com.ems.copilot.emscopilot.controller;
 import com.ems.copilot.emscopilot.domain.Encounter;
 import com.ems.copilot.emscopilot.domain.PatientVitalData;
 import com.ems.copilot.emscopilot.dto.request.ConfirmEncounterRequest;
+import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.EncounterResponse;
 import com.ems.copilot.emscopilot.service.EncounterService;
 import com.ems.copilot.emscopilot.service.SessionStorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +33,7 @@ public class EncounterController {
      */
     @PostMapping("/confirm")
     @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
-    public ResponseEntity<EncounterResponse> confirmEncounter(
+    public ResponseEntity<ApiResponse<EncounterResponse>> confirmEncounter(
             @Valid @RequestBody ConfirmEncounterRequest request) {
 
         log.info("==== Encounter 확정 요청 ====");
@@ -49,7 +49,7 @@ public class EncounterController {
         PatientVitalData vitalData = sessionStorageService.getVitalData(sessionCode)
                 .orElse(null);
 
-        EncounterResponse response;
+        EncounterResponse data;
         if (vitalData != null) {
             // 바이탈 정보를 포함하여 응답 생성
             EncounterResponse.VitalInfo vitalInfo = EncounterResponse.VitalInfo.builder()
@@ -62,15 +62,21 @@ public class EncounterController {
                     .symptoms(vitalData.getSymptoms())
                     .build();
 
-            response = EncounterResponse.fromWithVital(encounter, vitalInfo);
+            data = EncounterResponse.fromWithVital(encounter, vitalInfo);
             log.info("바이탈 정보 포함하여 응답 생성 완료");
         } else {
             // 바이탈 정보 없이 응답 (만료된 경우)
-            response = EncounterResponse.from(encounter);
+            data = EncounterResponse.from(encounter);
             log.warn("바이탈 정보 없음 (만료 또는 삭제됨) - 세션 코드: {}", sessionCode);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        ApiResponse<EncounterResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                "병원이 성공적으로 확정되었습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -80,7 +86,7 @@ public class EncounterController {
      */
     @PutMapping("/{id}/complete")
     @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
-    public ResponseEntity<EncounterResponse> completeEncounter(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<EncounterResponse>> completeEncounter(@PathVariable Long id) {
 
         log.info("==== Encounter 완료 처리 요청 ====");
         log.info("Encounter ID: {}", id);
@@ -90,7 +96,13 @@ public class EncounterController {
         log.info("Encounter 완료 처리 성공 - ID: {}, Redis 바이탈 삭제 완료", encounter.getId());
 
         // Entity -> DTO 변환 (바이탈 정보 제외)
-        EncounterResponse response = EncounterResponse.from(encounter);
+        EncounterResponse data = EncounterResponse.from(encounter);
+
+        ApiResponse<EncounterResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                "이송이 성공적으로 완료되었습니다.",
+                data
+        );
 
         return ResponseEntity.ok(response);
     }

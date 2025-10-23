@@ -20,7 +20,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "patientVital", timeToLive = 1800)  // 30분 = 1800초
+@RedisHash(value = "patientVital", timeToLive = 18000)  // 5시간
 public class PatientVitalData {
 
     // 세션 정보 (Redis Key로 사용)

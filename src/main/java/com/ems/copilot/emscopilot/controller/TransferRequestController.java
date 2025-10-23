@@ -5,14 +5,16 @@ import com.ems.copilot.emscopilot.domain.HospitalRequest;
 import com.ems.copilot.emscopilot.domain.User;
 import com.ems.copilot.emscopilot.dto.request.HospitalResponseRequest;
 import com.ems.copilot.emscopilot.dto.request.SendToHospitalsRequest;
+import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse;
 import com.ems.copilot.emscopilot.dto.response.SendToHospitalsResponse;
+import com.ems.copilot.emscopilot.exception.CustomException;
+import com.ems.copilot.emscopilot.exception.ErrorCode;
 import com.ems.copilot.emscopilot.service.TransferRequestService;
 import com.ems.copilot.emscopilot.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -39,7 +41,7 @@ public class TransferRequestController {
      */
     @PostMapping("/send")
     @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
-    public ResponseEntity<SendToHospitalsResponse> sendToHospitals(
+    public ResponseEntity<ApiResponse<SendToHospitalsResponse>> sendToHospitals(
             @Valid @RequestBody SendToHospitalsRequest request) {
 
         log.info("==== 병원 전송 요청 ====");
@@ -47,11 +49,17 @@ public class TransferRequestController {
         log.info("선택한 병원 수: {}", request.getHospitalIds().size());
         log.info("병원 ID 목록: {}", request.getHospitalIds());
 
-        SendToHospitalsResponse response = transferRequestService.sendToHospitals(request);
+        SendToHospitalsResponse data = transferRequestService.sendToHospitals(request);
 
-        log.info("병원 전송 완료 - 총 {}개 병원에 전송됨", response.getTotalSent());
+        log.info("병원 전송 완료 - 총 {}개 병원에 전송됨", data.getTotalSent());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        ApiResponse<SendToHospitalsResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                data.getTotalSent() + "개 병원에 환자 정보가 전송되었습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -61,7 +69,7 @@ public class TransferRequestController {
      */
     @PutMapping("/sessions/{sessionCode}/respond")
     @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
-    public ResponseEntity<HospitalRequestResponse> respondToRequest(
+    public ResponseEntity<ApiResponse<HospitalRequestResponse>> respondToRequest(
             @PathVariable String sessionCode,
             @Valid @RequestBody HospitalResponseRequest request,
             Authentication authentication) {
@@ -78,7 +86,7 @@ public class TransferRequestController {
 
         if (hospital == null) {
             log.error("병원 정보가 없는 사용자 - 사번: {}", employeeNumber);
-            throw new RuntimeException("병원 정보가 없는 사용자입니다.");
+            throw new CustomException(ErrorCode.USER_HAS_NO_HOSPITAL);
         }
 
         log.info("병원 ID: {}, 병원명: {}", hospital.getId(), hospital.getName());
@@ -93,7 +101,13 @@ public class TransferRequestController {
         log.info("병원 응답 처리 완료 - 상태: {}", updatedRequest.getStatus());
 
         // Entity -> DTO 변환
-        HospitalRequestResponse response = HospitalRequestResponse.from(updatedRequest);
+        HospitalRequestResponse data = HospitalRequestResponse.from(updatedRequest);
+
+        ApiResponse<HospitalRequestResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                "병원 응답이 성공적으로 처리되었습니다.",
+                data
+        );
 
         return ResponseEntity.ok(response);
     }
