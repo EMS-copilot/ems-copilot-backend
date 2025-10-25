@@ -2,7 +2,9 @@ package com.ems.copilot.emscopilot.service;
 
 import com.ems.copilot.emscopilot.dto.request.VertexAIRequest;
 import com.ems.copilot.emscopilot.dto.response.VertexAIResponse;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,9 +16,20 @@ import java.util.Map;
 @Slf4j
 public class VertexAIService {
 
+    private final VertexAiClient vertexAiClient;
+    private final Gson gson;
+
+    @Value("${gcp.vertex-ai.use-mock:false}")
+    private boolean useMock;
+
+    public VertexAIService(VertexAiClient vertexAiClient) {
+        this.vertexAiClient = vertexAiClient;
+        this.gson = new Gson();
+    }
+
     /**
-     * Vertex AI 환자 분석 (현재는 Mock 데이터)
-     * TODO: 실제 Vertex AI API 연동 시 수정
+     * Vertex AI 환자 분석
+     * Vertex AI API를 호출하여 병원 추천 결과를 받습니다.
      */
     public VertexAIResponse analyzePatient(VertexAIRequest request) {
 
@@ -33,13 +46,29 @@ public class VertexAIService {
         log.info("후보 병원 수: {}", request.getCandidateHospitals().size());
         log.info("TopK: {}", request.getResultMethod().getTopK());
 
-        // TODO: 실제 Vertex AI API 호출
-        // RestTemplate으로 HTTP POST 요청
-        // String apiUrl = vertexAiEndpoint;
-        // VertexAIResponse response = restTemplate.postForObject(apiUrl, request, VertexAIResponse.class);
+        // Mock 모드가 활성화되어 있으면 Mock 응답 반환
+        if (useMock) {
+            log.info("Mock 모드 활성화 - Mock 응답 반환");
+            return createMockResponse(request.getPatient().getId());
+        }
 
-        // Mock 응답 생성
-        return createMockResponse(request.getPatient().getId());
+        try {
+            // 실제 Vertex AI API 호출
+            String responseJson = vertexAiClient.predict(request);
+
+            // JSON 응답을 DTO로 변환
+            VertexAIResponse response = gson.fromJson(responseJson, VertexAIResponse.class);
+
+            log.info("===== Vertex AI 분석 완료 =====");
+            log.info("추천 병원 수: {}", response.getPredictions().size());
+
+            return response;
+
+        } catch (Exception e) {
+            log.error("Vertex AI API 호출 실패, Mock 응답 반환: {}", e.getMessage());
+            // API 호출 실패 시 Mock 응답 반환 (Fallback)
+            return createMockResponse(request.getPatient().getId());
+        }
     }
 
     /**

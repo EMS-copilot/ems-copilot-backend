@@ -34,6 +34,15 @@ dependencies {
     // Apache HttpClient 5 - 전체 의존성 추가
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.1'
 
+	// Spring WebFlux (WebClient 사용)
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// Google 인증 라이브러리 (OAuth2 기반)
+	implementation 'com.google.auth:google-auth-library-oauth2-http:1.25.0'
+
+	// Gson (JSON 처리)
+	implementation 'com.google.code.gson:gson:2.11.0'
+
     // jwt
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
