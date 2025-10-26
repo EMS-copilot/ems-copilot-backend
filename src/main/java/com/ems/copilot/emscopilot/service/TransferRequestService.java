@@ -163,4 +163,21 @@ public class TransferRequestService {
 
         return savedRequest;
     }
+
+    /**
+     * 세션 코드로 모든 병원 요청 조회
+     *
+     * @param sessionCode 세션 코드
+     * @return 병원 요청 목록
+     */
+    @Transactional(readOnly = true)
+    public List<HospitalRequest> getRequestsBySessionCode(String sessionCode) {
+        log.info("세션 코드로 병원 요청 목록 조회 - 세션 코드: {}", sessionCode);
+
+        List<HospitalRequest> requests = requestRepository.findBySessionCode(sessionCode);
+
+        log.info("병원 요청 목록 조회 완료 - 총 {}개", requests.size());
+
+        return requests;
+    }
 }

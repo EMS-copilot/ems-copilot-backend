@@ -8,6 +8,8 @@ import com.ems.copilot.emscopilot.dto.request.SendToHospitalsRequest;
 import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse;
 import com.ems.copilot.emscopilot.dto.response.SendToHospitalsResponse;
+
+import java.util.List;
 import com.ems.copilot.emscopilot.exception.CustomException;
 import com.ems.copilot.emscopilot.exception.ErrorCode;
 import com.ems.copilot.emscopilot.service.TransferRequestService;
@@ -106,6 +108,38 @@ public class TransferRequestController {
         ApiResponse<HospitalRequestResponse> response = new ApiResponse<>(
                 "SUCCESS",
                 "병원 응답이 성공적으로 처리되었습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 세션 코드로 병원 요청 목록 조회
+     *
+     * GET /api/hospital-requests/sessions/{sessionCode}
+     */
+    @GetMapping("/sessions/{sessionCode}")
+    @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
+    public ResponseEntity<ApiResponse<List<HospitalRequestResponse>>> getRequestsBySessionCode(
+            @PathVariable String sessionCode) {
+
+        log.info("==== 병원 요청 목록 조회 ====");
+        log.info("세션 코드: {}", sessionCode);
+
+        // 병원 요청 목록 조회
+        List<HospitalRequest> requests = transferRequestService.getRequestsBySessionCode(sessionCode);
+
+        // Entity -> DTO 변환
+        List<HospitalRequestResponse> data = requests.stream()
+                .map(HospitalRequestResponse::from)
+                .toList();
+
+        log.info("병원 요청 목록 조회 완료 - 총 {}개", data.size());
+
+        ApiResponse<List<HospitalRequestResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "병원 요청 목록을 성공적으로 조회했습니다.",
                 data
         );
 
