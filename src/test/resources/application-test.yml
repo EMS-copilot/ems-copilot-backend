@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+# 테스트용 GCP 더미 설정 (실제 호출하지 않음)
+gcp:
+  service-account:
+    key-path: classpath:test-dummy-key.json
+  vertex-ai:
+    project-id: test-project-id
+    location: test-location
+    endpoint-id: test-endpoint-id
+    endpoint-url: https://test-endpoint.com/predict
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ems_copilot?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:test}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show_sql: false  # 테스트 시 SQL 로그 끄기
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        default_batch_fetch_size: 100
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+jwt:
+  secret: ${JWT_SECRET:test-secret-key-for-testing-must-be-at-least-256-bits-long-for-security-purposes}
+  expiration: ${JWT_EXPIRATION:3600000}
