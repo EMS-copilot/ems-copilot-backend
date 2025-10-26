@@ -2,6 +2,7 @@ package com.ems.copilot.emscopilot.service;
 
 import com.ems.copilot.emscopilot.dto.request.VertexAIRequest;
 import com.ems.copilot.emscopilot.dto.response.VertexAIResponse;
+import com.ems.copilot.emscopilot.dto.response.VertexAIPredictionResponse;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,13 +39,13 @@ public class VertexAIService {
         log.info("나이: {}, 성별: {}, KTAS: {}",
                 request.getPatient().getAge(),
                 request.getPatient().getSex(),
-                request.getPatient().getTriageLevel());
+                request.getPatient().getTriage_level());
         log.info("혈압: {}, 심박수: {}, 증상: {}",
-                request.getPatient().getBpSystolic(),
+                request.getPatient().getBp_systolic(),
                 request.getPatient().getHr(),
                 request.getPatient().getSymptom());
-        log.info("후보 병원 수: {}", request.getCandidateHospitals().size());
-        log.info("TopK: {}", request.getResultMethod().getTopK());
+        log.info("후보 병원 수: {}", request.getCandidate_hospitals().size());
+        log.info("TopK: {}", request.getResult_method().getTopK());
 
         // Mock 모드가 활성화되어 있으면 Mock 응답 반환
         if (useMock) {
@@ -57,7 +58,16 @@ public class VertexAIService {
             String responseJson = vertexAiClient.predict(request);
 
             // JSON 응답을 DTO로 변환
-            VertexAIResponse response = gson.fromJson(responseJson, VertexAIResponse.class);
+            // Vertex AI는 {"predictions": [<응답>]} 형태로 반환
+            VertexAIPredictionResponse wrapper = gson.fromJson(responseJson, VertexAIPredictionResponse.class);
+
+            if (wrapper == null || wrapper.getPredictions() == null || wrapper.getPredictions().isEmpty()) {
+                log.error("Vertex AI 응답이 비어있습니다. Mock 응답 반환");
+                return createMockResponse(request.getPatient().getId());
+            }
+
+            // predictions 배열의 첫 번째 요소 추출
+            VertexAIResponse response = wrapper.getPredictions().get(0);
 
             log.info("===== Vertex AI 분석 완료 =====");
             log.info("추천 병원 수: {}", response.getPredictions().size());
