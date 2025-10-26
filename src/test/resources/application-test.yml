@@ -12,24 +12,19 @@ gcp:
     endpoint-url: https://test-endpoint.com/predict
 
 spring:
-  # 테스트용 H2 인메모리 데이터베이스 사용
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
-  h2:
-    console:
-      enabled: false
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ems_copilot?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:test}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop  # 테스트마다 스키마 재생성
-    show_sql: false  # 테스트 시 SQL 로그 끄기
+      ddl-auto: update
+    show_sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
         default_batch_fetch_size: 100
 
