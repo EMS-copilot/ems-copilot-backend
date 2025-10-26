@@ -5,6 +5,7 @@ import com.ems.copilot.emscopilot.dto.response.SpeechToTextResponse;
 import com.ems.copilot.emscopilot.service.SpeechToTextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/speech")
 @RequiredArgsConstructor
+@Profile("!test")
 @Slf4j
 public class SpeechController {
 

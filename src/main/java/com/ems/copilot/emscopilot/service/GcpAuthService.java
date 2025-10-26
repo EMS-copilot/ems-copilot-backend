@@ -4,6 +4,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
  * 서비스 계정 키 파일을 사용하여 Access Token을 획득하고 관리합니다.
  */
 @Service
+@Profile("!test")
 @Slf4j
 public class GcpAuthService {
 

@@ -8,6 +8,7 @@ import com.google.cloud.speech.v1.*;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  * 음성 파일을 텍스트로 변환하는 기능을 제공합니다.
  */
 @Service
+@Profile("!test")
 @Slf4j
 public class SpeechToTextService {
 

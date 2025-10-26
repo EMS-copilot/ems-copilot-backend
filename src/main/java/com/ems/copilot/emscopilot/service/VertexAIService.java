@@ -6,6 +6,7 @@ import com.ems.copilot.emscopilot.dto.response.VertexAIPredictionResponse;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Profile("!test")
 @Slf4j
 public class VertexAIService {
 

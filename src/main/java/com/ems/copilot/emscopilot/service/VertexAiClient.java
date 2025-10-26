@@ -3,6 +3,7 @@ package com.ems.copilot.emscopilot.service;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.time.Duration;
  * Google Cloud의 Vertex AI 엔드포인트에 예측 요청을 보냅니다.
  */
 @Service
+@Profile("!test")
 @Slf4j
 public class VertexAiClient {
 
