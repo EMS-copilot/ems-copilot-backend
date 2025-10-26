@@ -49,3 +49,6 @@ application-prod.yml
 ### GCP 서비스 계정 키 파일 ###
 *-key.json
 ems-backend-key.json
+
+### Windows 관련 ###
+nul
