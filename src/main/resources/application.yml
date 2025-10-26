@@ -7,7 +7,7 @@ gcp:
   vertex-ai:
     project-id: ${GCP_PROJECT_ID:158656738463}
     location: ${GCP_LOCATION:asia-northeast3}
-    endpoint-id: ${GCP_ENDPOINT_ID:8744655669237383168}
+    endpoint-id: ${GCP_ENDPOINT_ID:7393997993491300352}
     endpoint-url: https://${gcp.vertex-ai.location}-aiplatform.googleapis.com/v1/projects/${gcp.vertex-ai.project-id}/locations/${gcp.vertex-ai.location}/endpoints/${gcp.vertex-ai.endpoint-id}:predict
 
 spring:
