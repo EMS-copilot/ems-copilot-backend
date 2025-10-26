@@ -93,7 +93,7 @@ public class SpeechController {
      * @return 변환된 텍스트 및 신뢰도 정보
      */
     @PostMapping("/transcribe/gcs")
-    @PreAuthorize("hasAnyRole('PARAMEDIC_ADMIN', 'HOSPITAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('PARAMEDIC_ADMIN', 'PARAMEDIC', 'HOSPITAL_ADMIN')")
     public ResponseEntity<ApiResponse<SpeechToTextResponse>> transcribeGcsAudio(
             @RequestParam("gcsUri") String gcsUri,
             @RequestParam(value = "languageCode", defaultValue = "ko-KR") String languageCode,
