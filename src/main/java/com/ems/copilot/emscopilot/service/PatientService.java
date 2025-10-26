@@ -182,21 +182,21 @@ public class PatientService {
                 .id(patientTempId)
                 .age(request.getAge())
                 .sex(request.getSex())
-                .triageLevel(request.getTriageLevel())
+                .triage_level(request.getTriageLevel())
                 .symptom(symptomString)
-                .bpSystolic(request.getSbp())
+                .bp_systolic(request.getSbp())
                 .hr(request.getHr())
                 .build();
 
         // 후보 병원 리스트 구성
         List<VertexAIRequest.CandidateHospital> candidates = candidateHospitals.stream()
                 .map(hospital -> VertexAIRequest.CandidateHospital.builder()
-                        .hospitalId(hospital.getExternalId())
-                        .hospitalCapacity(hospital.getHospitalCapacity())
-                        .icuBeds(hospital.getIcuBeds())
-                        .erBeds(hospital.getErBeds())
-                        .distanceKm(hospital.getDistance())
-                        .etaMinutes(hospital.getEta())
+                        .hospital_id(hospital.getExternalId())
+                        .hospital_capacity(hospital.getHospitalCapacity())
+                        .icu_beds(hospital.getIcuBeds())
+                        .er_beds(hospital.getErBeds())
+                        .distance_km(hospital.getDistance())
+                        .eta_minutes(hospital.getEta())
                         .build())
                 .toList();
 
@@ -207,8 +207,8 @@ public class PatientService {
 
         return VertexAIRequest.builder()
                 .patient(patient)
-                .candidateHospitals(candidates)
-                .resultMethod(resultMethod)
+                .candidate_hospitals(candidates)
+                .result_method(resultMethod)
                 .build();
     }
 

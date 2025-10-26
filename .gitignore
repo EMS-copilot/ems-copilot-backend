@@ -45,3 +45,7 @@ application-dev.yml
 application-prod.yml
 !application.yml
 *.log
+
+### GCP 서비스 계정 키 파일 ###
+*-key.json
+ems-backend-key.json
