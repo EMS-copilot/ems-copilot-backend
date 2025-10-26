@@ -25,6 +25,12 @@ repositories {
 }
 
 dependencies {
+	// Google Cloud Libraries BOM (버전 관리)
+	implementation platform('com.google.cloud:libraries-bom:26.50.0')
+
+	// Google Auth 라이브러리 최신 버전 강제 (SecureSessionAgent 포함)
+	implementation 'com.google.auth:google-auth-library-oauth2-http:1.27.0'
+
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -37,8 +43,8 @@ dependencies {
 	// Spring WebFlux (WebClient 사용)
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-	// Google 인증 라이브러리 (OAuth2 기반)
-	implementation 'com.google.auth:google-auth-library-oauth2-http:1.25.0'
+	// Google Cloud Speech-to-Text - BOM이 버전 관리
+	implementation 'com.google.cloud:google-cloud-speech'
 
 	// Gson (JSON 처리)
 	implementation 'com.google.code.gson:gson:2.11.0'
