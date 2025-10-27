@@ -21,10 +21,10 @@ public class VertexAIRequest {
     private Patient patient;
 
     @JsonProperty("candidate_hospitals")
-    private List<CandidateHospital> candidate_hospitals;
+    private List<CandidateHospital> candidateHospitals;
 
     @JsonProperty("result_method")
-    private ResultMethod result_method;
+    private ResultMethod resultMethod;
 
     @Data
     @Builder
@@ -36,12 +36,12 @@ public class VertexAIRequest {
         private String sex;
 
         @JsonProperty("triage_level")
-        private Integer triage_level;
+        private Integer triageLevel;
 
         private String symptom;
 
         @JsonProperty("bp_systolic")
-        private Integer bp_systolic;
+        private Integer bpSystolic;
 
         private Integer hr;
     }
@@ -52,22 +52,22 @@ public class VertexAIRequest {
     @AllArgsConstructor
     public static class CandidateHospital {
         @JsonProperty("hospital_id")
-        private String hospital_id;
+        private String hospitalId;
 
         @JsonProperty("hospital_capacity")
-        private Integer hospital_capacity;
+        private Integer hospitalCapacity;
 
         @JsonProperty("icu_beds")
-        private Integer icu_beds;
+        private Integer icuBeds;
 
         @JsonProperty("er_beds")
-        private Integer er_beds;
+        private Integer erBeds;
 
         @JsonProperty("distance_km")
-        private Double distance_km;
+        private Double distanceKm;
 
         @JsonProperty("eta_minutes")
-        private Integer eta_minutes;
+        private Integer etaMinutes;
     }
 
     @Data
