@@ -8,6 +8,7 @@ import com.ems.copilot.emscopilot.exception.CustomException;
 import com.ems.copilot.emscopilot.exception.ErrorCode;
 import com.ems.copilot.emscopilot.repository.HospitalRepository;
 import com.ems.copilot.emscopilot.repository.HospitalRequestRepository;
+import com.ems.copilot.emscopilot.repository.TransferSessionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class TransferRequestService {
 
     private final HospitalRequestRepository requestRepository;
     private final HospitalRepository hospitalRepository;
+    private final TransferSessionRepository sessionRepository;
     private final SessionStorageService storageService;
     private final ObjectMapper objectMapper;
 
@@ -179,5 +181,23 @@ public class TransferRequestService {
         log.info("병원 요청 목록 조회 완료 - 총 {}개", requests.size());
 
         return requests;
+    }
+
+    /**
+     * 세션 코드로 세션 정보 조회
+     *
+     * @param sessionCode 세션 코드
+     * @return 세션 정보
+     */
+    @Transactional(readOnly = true)
+    public TransferSession getSessionByCode(String sessionCode) {
+        log.info("세션 코드로 세션 조회 - 세션 코드: {}", sessionCode);
+
+        TransferSession session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+
+        log.info("세션 조회 완료 - 환자 코드: {}, 상태: {}", session.getPatientCode(), session.getStatus());
+
+        return session;
     }
 }
