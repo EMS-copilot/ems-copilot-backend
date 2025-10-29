@@ -3,7 +3,7 @@ package com.ems.copilot.emscopilot.service;
 import com.ems.copilot.emscopilot.dto.request.VertexAIRequest;
 import com.ems.copilot.emscopilot.dto.response.VertexAIResponse;
 import com.ems.copilot.emscopilot.dto.response.VertexAIPredictionResponse;
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -20,14 +20,14 @@ import java.util.Map;
 public class VertexAIService {
 
     private final VertexAiClient vertexAiClient;
-    private final Gson gson;
+    private final ObjectMapper objectMapper;
 
     @Value("${gcp.vertex-ai.use-mock:false}")
     private boolean useMock;
 
-    public VertexAIService(VertexAiClient vertexAiClient) {
+    public VertexAIService(VertexAiClient vertexAiClient, ObjectMapper objectMapper) {
         this.vertexAiClient = vertexAiClient;
-        this.gson = new Gson();
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -41,13 +41,13 @@ public class VertexAIService {
         log.info("나이: {}, 성별: {}, KTAS: {}",
                 request.getPatient().getAge(),
                 request.getPatient().getSex(),
-                request.getPatient().getTriage_level());
+                request.getPatient().getTriageLevel());
         log.info("혈압: {}, 심박수: {}, 증상: {}",
-                request.getPatient().getBp_systolic(),
+                request.getPatient().getBpSystolic(),
                 request.getPatient().getHr(),
                 request.getPatient().getSymptom());
-        log.info("후보 병원 수: {}", request.getCandidate_hospitals().size());
-        log.info("TopK: {}", request.getResult_method().getTopK());
+        log.info("후보 병원 수: {}", request.getCandidateHospitals().size());
+        log.info("TopK: {}", request.getResultMethod().getTopK());
 
         // Mock 모드가 활성화되어 있으면 Mock 응답 반환
         if (useMock) {
@@ -59,9 +59,11 @@ public class VertexAIService {
             // 실제 Vertex AI API 호출
             String responseJson = vertexAiClient.predict(request);
 
+            log.info("Vertex AI 원본 응답: {}", responseJson);
+
             // JSON 응답을 DTO로 변환
             // Vertex AI는 {"predictions": [<응답>]} 형태로 반환
-            VertexAIPredictionResponse wrapper = gson.fromJson(responseJson, VertexAIPredictionResponse.class);
+            VertexAIPredictionResponse wrapper = objectMapper.readValue(responseJson, VertexAIPredictionResponse.class);
 
             if (wrapper == null || wrapper.getPredictions() == null || wrapper.getPredictions().isEmpty()) {
                 log.error("Vertex AI 응답이 비어있습니다. Mock 응답 반환");
@@ -96,7 +98,7 @@ public class VertexAIService {
 
         predictions.add(VertexAIResponse.Prediction.builder()
                 .hospitalId("CBH-001")
-                .score(0.87)
+                .score(List.of(0.87))
                 .explanations(explanations1)
                 .build());
 
@@ -106,7 +108,7 @@ public class VertexAIService {
 
         predictions.add(VertexAIResponse.Prediction.builder()
                 .hospitalId("CBH-002")
-                .score(0.72)
+                .score(List.of(0.72))
                 .explanations(explanations2)
                 .build());
 
@@ -116,7 +118,7 @@ public class VertexAIService {
 
         predictions.add(VertexAIResponse.Prediction.builder()
                 .hospitalId("CBH-003")
-                .score(0.63)
+                .score(List.of(0.63))
                 .explanations(explanations3)
                 .build());
 

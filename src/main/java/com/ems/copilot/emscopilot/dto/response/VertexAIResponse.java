@@ -31,8 +31,15 @@ public class VertexAIResponse {
         @JsonProperty("hospital_id")
         private String hospitalId;
 
-        private Double score;
+        private List<Double> score;
 
         private Map<String, Double> explanations;
+
+        /**
+         * score 배열의 첫 번째 값을 반환 (Vertex AI는 score를 배열로 반환)
+         */
+        public Double getScoreValue() {
+            return (score != null && !score.isEmpty()) ? score.get(0) : 0.0;
+        }
     }
 }

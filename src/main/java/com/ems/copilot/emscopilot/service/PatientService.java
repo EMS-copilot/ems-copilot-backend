@@ -155,7 +155,7 @@ public class PatientService {
                     PatientRegistrationResponse.RecommendedHospital.builder()
                             .hospitalId(prediction.getHospitalId())
                             .hospitalName(hospital.getName())
-                            .aiScore(prediction.getScore())
+                            .aiScore(prediction.getScoreValue())
                             .priority(priority++)
                             .aiExplanations(prediction.getExplanations())
                             .distance(distance)
@@ -182,21 +182,21 @@ public class PatientService {
                 .id(patientTempId)
                 .age(request.getAge())
                 .sex(request.getSex())
-                .triage_level(request.getTriageLevel())
+                .triageLevel(request.getTriageLevel())
                 .symptom(symptomString)
-                .bp_systolic(request.getSbp())
+                .bpSystolic(request.getSbp())
                 .hr(request.getHr())
                 .build();
 
         // 후보 병원 리스트 구성
         List<VertexAIRequest.CandidateHospital> candidates = candidateHospitals.stream()
                 .map(hospital -> VertexAIRequest.CandidateHospital.builder()
-                        .hospital_id(hospital.getExternalId())
-                        .hospital_capacity(hospital.getHospitalCapacity())
-                        .icu_beds(hospital.getIcuBeds())
-                        .er_beds(hospital.getErBeds())
-                        .distance_km(hospital.getDistance())
-                        .eta_minutes(hospital.getEta())
+                        .hospitalId(hospital.getExternalId())
+                        .hospitalCapacity(hospital.getHospitalCapacity())
+                        .icuBeds(hospital.getIcuBeds())
+                        .erBeds(hospital.getErBeds())
+                        .distanceKm(hospital.getDistance())
+                        .etaMinutes(hospital.getEta())
                         .build())
                 .toList();
 
@@ -207,8 +207,8 @@ public class PatientService {
 
         return VertexAIRequest.builder()
                 .patient(patient)
-                .candidate_hospitals(candidates)
-                .result_method(resultMethod)
+                .candidateHospitals(candidates)
+                .resultMethod(resultMethod)
                 .build();
     }
 

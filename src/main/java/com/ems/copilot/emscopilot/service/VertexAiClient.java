@@ -1,6 +1,6 @@
 package com.ems.copilot.emscopilot.service;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -24,12 +24,12 @@ public class VertexAiClient {
 
     private final GcpAuthService authService;
     private final WebClient webClient;
-    private final Gson gson;
+    private final ObjectMapper objectMapper;
 
     @Value("${gcp.vertex-ai.endpoint-url}")
     private String endpointUrl;
 
-    public VertexAiClient(GcpAuthService authService, WebClient.Builder webClientBuilder) {
+    public VertexAiClient(GcpAuthService authService, WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.authService = authService;
         this.webClient = webClientBuilder
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -37,7 +37,7 @@ public class VertexAiClient {
                         .defaultCodecs()
                         .maxInMemorySize(10 * 1024 * 1024)) // 10MB
                 .build();
-        this.gson = new Gson();
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -64,7 +64,7 @@ public class VertexAiClient {
             requestJson = (String) requestBody;
         } else {
             // instances 배열로 감싸기
-            requestJson = String.format("{\"instances\": [%s]}", gson.toJson(requestBody));
+            requestJson = String.format("{\"instances\": [%s]}", objectMapper.writeValueAsString(requestBody));
         }
         log.info("요청 Body: {}", requestJson);
 
@@ -81,7 +81,7 @@ public class VertexAiClient {
                     .block();
 
             log.info("===== Vertex AI API 호출 성공 =====");
-            log.debug("응답 Body: {}", response);
+            log.info("응답 Body: {}", response);
 
             return response;
 

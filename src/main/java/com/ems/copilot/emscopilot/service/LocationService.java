@@ -14,9 +14,9 @@ public class LocationService {
      */
     public CurrentLocation getCurrentLocation(){
         return CurrentLocation.builder()
-                .address("충청북도 음성군 음성읍 중앙로 195")
-                .latitude(36.9401)
-                .longitude(127.6922)
+                .address("충북 음성군 금왕읍 음성로1340번길 31-1 한울요양원")
+                .latitude(37.039750)
+                .longitude(127.562095)
                 .build();
     }
 
