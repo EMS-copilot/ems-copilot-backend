@@ -1,7 +1,7 @@
 package com.ems.copilot.emscopilot.dto.response;
 
 import com.ems.copilot.emscopilot.domain.Encounter;
-import com.ems.copilot.emscopilot.domain.EncounterStatus;
+import com.ems.copilot.emscopilot.domain.SessionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,11 +30,13 @@ public class EncounterResponse {
     // 병원 정보
     private Long hospitalId;
     private String hospitalName;
+    private String hospitalAddress;
 
     // 환자 기본 정보 (최소한만)
     private Integer age;
     private String sex;
     private Integer triageLevel;
+    private java.util.List<String> chiefComplaints; // 주 증상
 
     // 바이탈 정보 (확정 시에만 포함, 병원에 전달)
     private VitalInfo vitalInfo;
@@ -49,7 +51,7 @@ public class EncounterResponse {
     private Integer aiPriority;
 
     // 상태
-    private EncounterStatus status;
+    private SessionStatus status;
 
     // 시간 정보
     private LocalDateTime createdAt;
@@ -86,9 +88,11 @@ public class EncounterResponse {
                 .sessionCode(entity.getSessionCode())
                 .hospitalId(entity.getHospital().getId())
                 .hospitalName(entity.getHospital().getName())
+                .hospitalAddress(entity.getHospital().getAddress())
                 .age(entity.getAge())
                 .sex(entity.getSex())
                 .triageLevel(entity.getTriageLevel())
+                .chiefComplaints(null) // 증상 정보 없이 변환
                 .vitalInfo(null) // 바이탈 정보 없이 변환
                 .transferLocation(entity.getTransferLocation())
                 .transferDistance(entity.getTransferDistance())
@@ -101,6 +105,15 @@ public class EncounterResponse {
                 .completedAt(entity.getCompletedAt())
                 .notes(entity.getNotes())
                 .build();
+    }
+
+    /**
+     * Entity -> DTO 변환 (증상 정보 포함)
+     */
+    public static EncounterResponse fromWithSession(Encounter entity, java.util.List<String> chiefComplaints) {
+        EncounterResponse response = from(entity);
+        response.setChiefComplaints(chiefComplaints);
+        return response;
     }
 
     /**

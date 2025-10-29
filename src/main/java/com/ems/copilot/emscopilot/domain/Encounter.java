@@ -82,7 +82,7 @@ public class Encounter {
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private EncounterStatus status; // TRANSFERRED, COMPLETED, CANCELLED
+    private SessionStatus status; // PENDING, TRANSFERRED, COMPLETED, CANCELLED
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

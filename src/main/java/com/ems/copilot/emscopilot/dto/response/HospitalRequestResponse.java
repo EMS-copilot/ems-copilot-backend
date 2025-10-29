@@ -31,6 +31,9 @@ public class HospitalRequestResponse {
     // 병원 정보
     private Long hospitalId;
     private String hospitalName;
+    private String hospitalAddress;
+    private Double distance;
+    private Integer eta;
 
     // 환자 간단 정보
     private Integer age;
@@ -60,6 +63,9 @@ public class HospitalRequestResponse {
                 .patientCode(entity.getPatientCode())
                 .hospitalId(entity.getHospital().getId())
                 .hospitalName(entity.getHospital().getName())
+                .hospitalAddress(entity.getHospital().getAddress())
+                .distance(entity.getHospital().getDistance())
+                .eta(entity.getHospital().getEta())
                 .age(entity.getAge())
                 .sex(entity.getSex())
                 .triageLevel(entity.getTriageLevel())
