@@ -2,6 +2,8 @@ package com.ems.copilot.emscopilot.controller;
 
 import com.ems.copilot.emscopilot.domain.Hospital;
 import com.ems.copilot.emscopilot.domain.HospitalRequest;
+import com.ems.copilot.emscopilot.domain.RequestStatus;
+import com.ems.copilot.emscopilot.domain.SessionStatus;
 import com.ems.copilot.emscopilot.domain.TransferSession;
 import com.ems.copilot.emscopilot.domain.User;
 import com.ems.copilot.emscopilot.dto.request.HospitalResponseRequest;
@@ -46,14 +48,16 @@ public class TransferRequestController {
     @PostMapping("/send")
     @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
     public ResponseEntity<ApiResponse<SendToHospitalsResponse>> sendToHospitals(
-            @Valid @RequestBody SendToHospitalsRequest request) {
+            @Valid @RequestBody SendToHospitalsRequest request,
+            Authentication authentication) {
 
         log.info("==== 병원 전송 요청 ====");
         log.info("세션 코드: {}", request.getSessionCode());
         log.info("선택한 병원 수: {}", request.getHospitalIds().size());
         log.info("병원 ID 목록: {}", request.getHospitalIds());
 
-        SendToHospitalsResponse data = transferRequestService.sendToHospitals(request);
+        String employeeNumber = authentication.getName();
+        SendToHospitalsResponse data = transferRequestService.sendToHospitals(request, employeeNumber);
 
         log.info("병원 전송 완료 - 총 {}개 병원에 전송됨", data.getTotalSent());
 
@@ -172,6 +176,134 @@ public class TransferRequestController {
         ApiResponse<TransferSessionResponse> response = new ApiResponse<>(
                 "SUCCESS",
                 "세션 정보를 성공적으로 조회했습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 구급대원이 세션 목록 조회 (전체)
+     *
+     * GET /api/hospital-requests/sessions
+     */
+    @GetMapping("/sessions")
+    @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
+    public ResponseEntity<ApiResponse<List<TransferSessionResponse>>> getMySessions(
+            Authentication authentication) {
+
+        log.info("==== 내 세션 목록 조회 ====");
+
+        String employeeNumber = authentication.getName();
+        List<TransferSession> sessions = transferRequestService.getMyTransferSessions(employeeNumber);
+
+        // Entity -> DTO 변환
+        List<TransferSessionResponse> data = sessions.stream()
+                .map(TransferSessionResponse::from)
+                .toList();
+
+        log.info("세션 목록 조회 완료 - 총 {}개", data.size());
+
+        ApiResponse<List<TransferSessionResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "세션 목록을 성공적으로 조회했습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 구급대원 본인이 생성한 세션 목록 조회 (상태별)
+     *
+     * GET /api/hospital-requests/sessions?status=PENDING
+     */
+    @GetMapping("/sessions/status")
+    @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
+    public ResponseEntity<ApiResponse<List<TransferSessionResponse>>> getMySessionsByStatus(
+            @RequestParam SessionStatus status,
+            Authentication authentication) {
+
+        log.info("==== 내 세션 목록 조회 (상태별) ====");
+        log.info("상태: {}", status);
+
+        String employeeNumber = authentication.getName();
+        List<TransferSession> sessions = transferRequestService.getMyTransferSessionsByStatus(employeeNumber, status);
+
+        // Entity -> DTO 변환
+        List<TransferSessionResponse> data = sessions.stream()
+                .map(TransferSessionResponse::from)
+                .toList();
+
+        log.info("세션 목록 조회 완료 - 상태: {}, 총 {}개", status, data.size());
+
+        ApiResponse<List<TransferSessionResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "세션 목록을 성공적으로 조회했습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 본인 병원이 받은 요청 목록 조회 (전체)
+     *
+     * GET /api/hospital-requests/hospital
+     */
+    @GetMapping("/hospital")
+    @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
+    public ResponseEntity<ApiResponse<List<HospitalRequestResponse>>> getHospitalRequests(
+            Authentication authentication) {
+
+        log.info("==== 병원 요청 목록 조회 ====");
+
+        String employeeNumber = authentication.getName();
+        List<HospitalRequest> requests = transferRequestService.getHospitalRequests(employeeNumber);
+
+        // Entity -> DTO 변환
+        List<HospitalRequestResponse> data = requests.stream()
+                .map(HospitalRequestResponse::from)
+                .toList();
+
+        log.info("병원 요청 목록 조회 완료 - 총 {}개", data.size());
+
+        ApiResponse<List<HospitalRequestResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "병원 요청 목록을 성공적으로 조회했습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 본인 병원이 받은 요청 목록 조회 (상태별)
+     *
+     * GET /api/status?status=PENDING
+     */
+    @GetMapping("/hospital/status")
+    @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
+    public ResponseEntity<ApiResponse<List<HospitalRequestResponse>>> getHospitalRequestsByStatus(
+            @RequestParam RequestStatus status,
+            Authentication authentication) {
+
+        log.info("==== 병원 요청 목록 조회 (상태별) ====");
+        log.info("상태: {}", status);
+
+        String employeeNumber = authentication.getName();
+        List<HospitalRequest> requests = transferRequestService.getHospitalRequestsByStatus(employeeNumber, status);
+
+        // Entity -> DTO 변환
+        List<HospitalRequestResponse> data = requests.stream()
+                .map(HospitalRequestResponse::from)
+                .toList();
+
+        log.info("병원 요청 목록 조회 완료 - 상태: {}, 총 {}개", status, data.size());
+
+        ApiResponse<List<HospitalRequestResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "병원 요청 목록을 성공적으로 조회했습니다.",
                 data
         );
 

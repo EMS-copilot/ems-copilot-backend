@@ -26,6 +26,7 @@ public class HospitalRequestResponse {
 
     private Long id;
     private String sessionCode;
+    private String patientCode;
 
     // 병원 정보
     private Long hospitalId;
@@ -56,6 +57,7 @@ public class HospitalRequestResponse {
         return HospitalRequestResponse.builder()
                 .id(entity.getId())
                 .sessionCode(entity.getSessionCode())
+                .patientCode(entity.getPatientCode())
                 .hospitalId(entity.getHospital().getId())
                 .hospitalName(entity.getHospital().getName())
                 .age(entity.getAge())

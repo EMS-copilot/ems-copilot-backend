@@ -71,6 +71,7 @@ public class EncounterService {
                 .patientCode(session.getPatientCode())
                 .patientTempId(session.getPatientTempId())
                 .sessionCode(session.getSessionCode())
+                .paramedic(session.getParamedic())
                 .hospital(hospitalRequest.getHospital())
                 // 기본 정보만 저장 (개인정보 최소화)
                 .age(vitalData.getAge())

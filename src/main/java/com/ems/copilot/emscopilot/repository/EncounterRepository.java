@@ -30,4 +30,14 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
      * 상태로 Encounter 목록 조회
      */
     List<Encounter> findByStatus(EncounterStatus status);
+
+    /**
+     * 구급대원 ID로 이송 내역 조회 (최신순)
+     */
+    List<Encounter> findByParamedicIdOrderByCreatedAtDesc(Long paramedicId);
+
+    /**
+     * 구급대원 ID와 상태로 이송 내역 조회
+     */
+    List<Encounter> findByParamedicIdAndStatus(Long paramedicId, EncounterStatus status);
 }

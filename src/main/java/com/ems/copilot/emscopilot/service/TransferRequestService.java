@@ -33,28 +33,40 @@ public class TransferRequestService {
     private final TransferSessionRepository sessionRepository;
     private final SessionStorageService storageService;
     private final ObjectMapper objectMapper;
+    private final com.ems.copilot.emscopilot.repository.UserRepository userRepository;
 
     /**
      * 선택한 병원들에게 환자 정보 전송
      *
      * @param request 세션 코드와 선택한 병원 ID 목록
+     * @param employeeNumber 현재 로그인한 구급대원 사번
      * @return 전송 결과
      */
     @Transactional
-    public SendToHospitalsResponse sendToHospitals(SendToHospitalsRequest request) {
+    public SendToHospitalsResponse sendToHospitals(SendToHospitalsRequest request, String employeeNumber) {
         String sessionCode = request.getSessionCode();
         List<Long> hospitalIds = request.getHospitalIds();
 
         log.info("병원 전송 시작 - 세션 코드: {}, 병원 수: {}", sessionCode, hospitalIds.size());
 
-        // 1. Redis에서 바이탈 정보 조회
+        // 1. 구급대원 조회
+        User paramedic = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        log.info("구급대원 조회 완료 - 이름: {}, 사번: {}", paramedic.getName(), paramedic.getEmployeeNumber());
+
+        // 2. TransferSession 조회 (환자 코드 가져오기)
+        TransferSession session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+        log.info("세션 조회 완료 - 환자 코드: {}", session.getPatientCode());
+
+        // 3. Redis에서 바이탈 정보 조회
         PatientVitalData vitalData = storageService.getVitalData(sessionCode)
                 .orElseThrow(() -> new CustomException(ErrorCode.VITAL_DATA_NOT_FOUND));
 
         log.info("바이탈 정보 조회 성공 - 나이: {}, 성별: {}, KTAS: {}",
                 vitalData.getAge(), vitalData.getSex(), vitalData.getTriageLevel());
 
-        // 2. 각 병원별 HospitalRequest 생성
+        // 4. 각 병원별 HospitalRequest 생성
         List<SendToHospitalsResponse.HospitalRequestInfo> results = new ArrayList<>();
 
         for (Long hospitalId : hospitalIds) {
@@ -75,6 +87,8 @@ public class TransferRequestService {
             // HospitalRequest 생성
             HospitalRequest hospitalRequest = HospitalRequest.builder()
                     .sessionCode(sessionCode)
+                    .patientCode(session.getPatientCode())
+                    .paramedic(paramedic)
                     .hospital(hospital)
                     .age(vitalData.getAge())
                     .sex(vitalData.getSex())
@@ -199,5 +213,97 @@ public class TransferRequestService {
         log.info("세션 조회 완료 - 환자 코드: {}, 상태: {}", session.getPatientCode(), session.getStatus());
 
         return session;
+    }
+
+    /**
+     * 구급대원이 생성한 모든 세션 조회 (최신순)
+     *
+     * @param employeeNumber 구급대원 사번
+     * @return 세션 목록
+     */
+    @Transactional(readOnly = true)
+    public List<TransferSession> getMyTransferSessions(String employeeNumber) {
+        log.info("구급대원 세션 목록 조회 시작 - 사번: {}", employeeNumber);
+
+        User paramedic = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        List<TransferSession> sessions = sessionRepository.findByParamedicIdOrderByCreatedAtDesc(paramedic.getId());
+
+        log.info("구급대원 세션 목록 조회 완료 - 총 {}개", sessions.size());
+
+        return sessions;
+    }
+
+    /**
+     * 구급대원이 생성한 세션 중 특정 상태의 세션 조회
+     *
+     * @param employeeNumber 구급대원 사번
+     * @param status 세션 상태
+     * @return 세션 목록
+     */
+    @Transactional(readOnly = true)
+    public List<TransferSession> getMyTransferSessionsByStatus(String employeeNumber, SessionStatus status) {
+        log.info("구급대원 세션 목록 조회 시작 - 사번: {}, 상태: {}", employeeNumber, status);
+
+        User paramedic = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        List<TransferSession> sessions = sessionRepository.findByParamedicIdAndStatus(paramedic.getId(), status);
+
+        log.info("구급대원 세션 목록 조회 완료 - 상태: {}, 총 {}개", status, sessions.size());
+
+        return sessions;
+    }
+
+    /**
+     * 병원이 받은 모든 요청 조회 (최신순)
+     *
+     * @param employeeNumber 병원 직원 사번
+     * @return 병원 요청 목록
+     */
+    @Transactional(readOnly = true)
+    public List<HospitalRequest> getHospitalRequests(String employeeNumber) {
+        log.info("병원 요청 목록 조회 시작 - 사번: {}", employeeNumber);
+
+        User hospitalStaff = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        Hospital hospital = hospitalStaff.getHospital();
+        if (hospital == null) {
+            throw new CustomException(ErrorCode.USER_HAS_NO_HOSPITAL);
+        }
+
+        List<HospitalRequest> requests = requestRepository.findByHospitalId(hospital.getId());
+
+        log.info("병원 요청 목록 조회 완료 - 병원: {}, 총 {}개", hospital.getName(), requests.size());
+
+        return requests;
+    }
+
+    /**
+     * 병원이 받은 요청 중 특정 상태의 요청 조회
+     *
+     * @param employeeNumber 병원 직원 사번
+     * @param status 요청 상태
+     * @return 병원 요청 목록
+     */
+    @Transactional(readOnly = true)
+    public List<HospitalRequest> getHospitalRequestsByStatus(String employeeNumber, RequestStatus status) {
+        log.info("병원 요청 목록 조회 시작 - 사번: {}, 상태: {}", employeeNumber, status);
+
+        User hospitalStaff = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        Hospital hospital = hospitalStaff.getHospital();
+        if (hospital == null) {
+            throw new CustomException(ErrorCode.USER_HAS_NO_HOSPITAL);
+        }
+
+        List<HospitalRequest> requests = requestRepository.findByHospitalIdAndStatus(hospital.getId(), status);
+
+        log.info("병원 요청 목록 조회 완료 - 병원: {}, 상태: {}, 총 {}개", hospital.getName(), status, requests.size());
+
+        return requests;
     }
 }

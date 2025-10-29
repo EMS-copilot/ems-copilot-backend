@@ -36,18 +36,25 @@ public class PatientService {
     private final HospitalRepository hospitalRepository;
     private final LocationService locationService;
     private final SessionStorageService storageService;
+    private final com.ems.copilot.emscopilot.repository.UserRepository userRepository;
 
     @Transactional
-    public PatientRegistrationResponse registerPatient(PatientDataRequest request) {
-        // 1. 세션 코드 생성
+    public PatientRegistrationResponse registerPatient(PatientDataRequest request, String employeeNumber) {
+        // 1. 구급대원 조회
+        com.ems.copilot.emscopilot.domain.User paramedic = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new com.ems.copilot.emscopilot.exception.CustomException(
+                        com.ems.copilot.emscopilot.exception.ErrorCode.USER_NOT_FOUND));
+        log.info("구급대원 조회 완료 - 이름: {}, 사번: {}", paramedic.getName(), paramedic.getEmployeeNumber());
+
+        // 2. 세션 코드 생성
         String sessionCode = generateSessionCode();
         log.info("세션 코드: {}", sessionCode);
 
-        // 2. 환자 코드 생성
+        // 3. 환자 코드 생성
         String patientCode = generatePatientCode();
         log.info("환자 코드: {}", patientCode);
 
-        // 3. 환자 임시 ID 생성 (UUID)
+        // 4. 환자 임시 ID 생성 (UUID)
         String patientTempId = generatePatientTempId();
         log.info("환자 임시 ID: {}", patientTempId);
 
@@ -65,6 +72,7 @@ public class PatientService {
                 .sessionCode(sessionCode)
                 .patientCode(patientCode)
                 .patientTempId(patientTempId)
+                .paramedic(paramedic)
                 .status(SessionStatus.PENDING)
                 .currentAddress(currentLocation.getAddress())
                 .currentLatitude(currentLocation.getLatitude())
