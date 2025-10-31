@@ -37,6 +37,13 @@ public class HospitalRequest {
     @Column(nullable = false, length = 50)
     private String sessionCode; // Redis에서 바이탈 정보 조회용
 
+    @Column(nullable = false, length = 50)
+    private String patientCode; // 환자 코드 (PT2025-001)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paramedic_id", nullable = false)
+    private User paramedic;
+
     // 병원 정보
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_id", nullable = false)

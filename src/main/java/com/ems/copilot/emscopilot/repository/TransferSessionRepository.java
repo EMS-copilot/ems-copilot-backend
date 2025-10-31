@@ -32,4 +32,14 @@ public interface TransferSessionRepository extends JpaRepository<TransferSession
             "FROM TransferSession s " +
             "WHERE s.sessionCode LIKE CONCAT('S', :year, '-%')")
     Integer findMaxSessionNumberByYear(@Param("year") String year);
+
+    /**
+     * 구급대원 ID로 세션 목록 조회 (최신순)
+     */
+    java.util.List<TransferSession> findByParamedicIdOrderByCreatedAtDesc(Long paramedicId);
+
+    /**
+     * 구급대원 ID와 상태로 세션 조회
+     */
+    java.util.List<TransferSession> findByParamedicIdAndStatus(Long paramedicId, com.ems.copilot.emscopilot.domain.SessionStatus status);
 }

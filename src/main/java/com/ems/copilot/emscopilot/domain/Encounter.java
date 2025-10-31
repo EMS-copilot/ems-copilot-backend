@@ -41,6 +41,10 @@ public class Encounter {
     @Column(nullable = false, length = 50)
     private String sessionCode; // "S2025-002" (TransferSession 참조)
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paramedic_id", nullable = false)
+    private User paramedic;
+
     // 매칭된 병원
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_id", nullable = false)
@@ -78,7 +82,7 @@ public class Encounter {
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private EncounterStatus status; // TRANSFERRED, COMPLETED, CANCELLED
+    private SessionStatus status; // PENDING, TRANSFERRED, COMPLETED, CANCELLED
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

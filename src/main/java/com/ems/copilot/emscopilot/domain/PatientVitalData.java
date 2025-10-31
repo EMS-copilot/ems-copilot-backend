@@ -14,13 +14,13 @@ import java.util.List;
 /**
  * Redis에 저장되는 환자 바이탈 정보
  * DB에는 저장되지 않음 (개인정보 보호)
- * 30분 후 자동 삭제 (TTL) 또는 Encounter 확정 시 삭제
+ * 3일 후 자동 삭제 (TTL) 또는 병원 처치 완료 시 삭제
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "patientVital", timeToLive = 18000)  // 5시간
+@RedisHash(value = "patientVital", timeToLive = 259200)  // 3일 (72시간)
 public class PatientVitalData {
 
     // 세션 정보 (Redis Key로 사용)
@@ -43,6 +43,9 @@ public class PatientVitalData {
     // 증상
     private List<String> symptoms;
 
-    // Redis TTL이 자동으로 30분 후 삭제 처리
+    // 구급대원 인계 메모
+    private String paramedicMemo;
+
+    // Redis TTL이 자동으로 3일 후 삭제 처리
     // expiresAt 필드 불필요 (Redis가 관리)
 }

@@ -38,6 +38,10 @@ public class TransferSession {
     @Column(nullable = false, length = 100)
     private String patientTempId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paramedic_id", nullable = false)
+    private User paramedic;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private SessionStatus status;

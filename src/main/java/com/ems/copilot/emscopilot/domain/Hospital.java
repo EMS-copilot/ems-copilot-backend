@@ -1,7 +1,8 @@
 package com.ems.copilot.emscopilot.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -40,7 +41,6 @@ public class Hospital {
     private Integer erBeds;
 
     @Column(name = "grade", length = 1)
-    @Pattern(regexp = "[A-F]")
     private Character rank;
 
     @Column(nullable = false)
@@ -58,4 +58,13 @@ public class Hospital {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * 병원 랭크 업데이트
+     *
+     * @param rank 새로운 등급 (A~F)
+     */
+    public void updateRank(Character rank) {
+        this.rank = rank;
+    }
 }

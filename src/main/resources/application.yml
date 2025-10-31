@@ -49,4 +49,4 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:3600000}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24시간 (1일)

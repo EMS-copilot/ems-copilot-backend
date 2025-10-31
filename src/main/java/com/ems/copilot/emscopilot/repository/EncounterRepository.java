@@ -1,7 +1,7 @@
 package com.ems.copilot.emscopilot.repository;
 
 import com.ems.copilot.emscopilot.domain.Encounter;
-import com.ems.copilot.emscopilot.domain.EncounterStatus;
+import com.ems.copilot.emscopilot.domain.SessionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -27,7 +27,22 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
     List<Encounter> findByHospitalId(Long hospitalId);
 
     /**
+     * 병원 ID로 Encounter 목록 조회 (최신순)
+     */
+    List<Encounter> findByHospitalIdOrderByCreatedAtDesc(Long hospitalId);
+
+    /**
      * 상태로 Encounter 목록 조회
      */
-    List<Encounter> findByStatus(EncounterStatus status);
+    List<Encounter> findByStatus(SessionStatus status);
+
+    /**
+     * 구급대원 ID로 이송 내역 조회 (최신순)
+     */
+    List<Encounter> findByParamedicIdOrderByCreatedAtDesc(Long paramedicId);
+
+    /**
+     * 구급대원 ID와 상태로 이송 내역 조회
+     */
+    List<Encounter> findByParamedicIdAndStatus(Long paramedicId, SessionStatus status);
 }
