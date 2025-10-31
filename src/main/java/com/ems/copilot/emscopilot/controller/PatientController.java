@@ -3,6 +3,7 @@ package com.ems.copilot.emscopilot.controller;
 import com.ems.copilot.emscopilot.dto.request.PatientDataRequest;
 import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.PatientRegistrationResponse;
+import com.ems.copilot.emscopilot.service.LocationService;
 import com.ems.copilot.emscopilot.service.PatientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/patients")
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PatientController {
 
     private final PatientService patientService;
+    private final LocationService locationService;
 
     /**
      * 환자 정보 등록
@@ -48,6 +48,30 @@ public class PatientController {
                 "SUCCESS",
                 "환자 정보가 성공적으로 등록되었습니다.",
                 data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 현재 위치 조회 (더미 데이터)
+     *
+     * GET /api/patients/location/current
+     */
+    @GetMapping("/location/current")
+    @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
+    public ResponseEntity<ApiResponse<LocationService.CurrentLocation>> getCurrentLocation() {
+        log.info("==== 현재 위치 조회 요청 ====");
+
+        LocationService.CurrentLocation location = locationService.getCurrentLocation();
+
+        log.info("현재 위치 반환 - 주소: {}, 위도: {}, 경도: {}",
+                location.getAddress(), location.getLatitude(), location.getLongitude());
+
+        ApiResponse<LocationService.CurrentLocation> response = new ApiResponse<>(
+                "SUCCESS",
+                "현재 위치를 성공적으로 조회했습니다.",
+                location
         );
 
         return ResponseEntity.ok(response);
