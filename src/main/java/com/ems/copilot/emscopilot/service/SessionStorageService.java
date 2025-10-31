@@ -13,9 +13,8 @@ import java.util.Optional;
  * DB에는 저장하지 않음 (개인정보 보호)
  *
  * 삭제 조건:
- * 1. 30분 경과 시 자동 삭제 (Redis TTL)
- * 2. Encounter 확정 시 수동 삭제
- * 3. 세션 취소 시 수동 삭제
+ * 1. 3일 경과 시 자동 삭제 (Redis TTL)
+ * 2. 병원 처치 완료 시 수동 삭제
  */
 @Service
 @Slf4j
@@ -34,7 +33,7 @@ public class SessionStorageService {
         vitalData.setSessionId(sessionId);
 
         vitalRepository.save(vitalData);
-        log.info("바이탈 정보 Redis 저장 (DB 저장 안 함, TTL: 30분) - 세션 ID: {}, 현재 저장 수: {}",
+        log.info("바이탈 정보 Redis 저장 (DB 저장 안 함, TTL: 3일) - 세션 ID: {}, 현재 저장 수: {}",
                 sessionId, vitalRepository.count());
     }
 
@@ -94,5 +93,27 @@ public class SessionStorageService {
         long count = vitalRepository.count();
         vitalRepository.deleteAll();
         log.warn("모든 바이탈 정보 강제 삭제 - {}개", count);
+    }
+
+    /**
+     * 구급대원 메모 저장/수정
+     *
+     * @param sessionCode 세션 코드
+     * @param memo 메모 내용
+     */
+    public void updateMemo(String sessionCode, String memo) {
+        Optional<PatientVitalData> vitalDataOpt = vitalRepository.findById(sessionCode);
+
+        if (vitalDataOpt.isEmpty()) {
+            log.error("바이탈 정보 없음 - 세션 코드: {}", sessionCode);
+            throw new com.ems.copilot.emscopilot.exception.CustomException(
+                    com.ems.copilot.emscopilot.exception.ErrorCode.VITAL_DATA_NOT_FOUND);
+        }
+
+        PatientVitalData vitalData = vitalDataOpt.get();
+        vitalData.setParamedicMemo(memo);
+        vitalRepository.save(vitalData);
+
+        log.info("구급대원 메모 저장 완료 - 세션 코드: {}, 메모 길이: {}자", sessionCode, memo.length());
     }
 }

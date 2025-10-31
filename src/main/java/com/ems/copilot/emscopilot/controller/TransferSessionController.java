@@ -2,9 +2,12 @@ package com.ems.copilot.emscopilot.controller;
 
 import com.ems.copilot.emscopilot.domain.SessionStatus;
 import com.ems.copilot.emscopilot.domain.TransferSession;
+import com.ems.copilot.emscopilot.dto.request.MemoUpdateRequest;
 import com.ems.copilot.emscopilot.dto.response.ApiResponse;
 import com.ems.copilot.emscopilot.dto.response.TransferSessionResponse;
+import com.ems.copilot.emscopilot.service.SessionStorageService;
 import com.ems.copilot.emscopilot.service.TransferSessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ import java.util.List;
 public class TransferSessionController {
 
     private final TransferSessionService transferSessionService;
+    private final SessionStorageService sessionStorageService;
 
     /**
      * 세션 코드로 세션 정보 조회(단건)
@@ -113,6 +117,34 @@ public class TransferSessionController {
                 "SUCCESS",
                 "세션 목록을 성공적으로 조회했습니다.",
                 data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 구급대원 메모 저장/수정
+     *
+     * PUT /api/transfer-sessions/{sessionCode}/memo
+     */
+    @PutMapping("/{sessionCode}/memo")
+    @PreAuthorize("hasAnyRole('PARAMEDIC', 'PARAMEDIC_ADMIN')")
+    public ResponseEntity<ApiResponse<String>> updateMemo(
+            @PathVariable String sessionCode,
+            @Valid @RequestBody MemoUpdateRequest request) {
+
+        log.info("==== 구급대원 메모 저장 ====");
+        log.info("세션 코드: {}", sessionCode);
+        log.info("메모 길이: {}자", request.getMemo().length());
+
+        sessionStorageService.updateMemo(sessionCode, request.getMemo());
+
+        log.info("메모 저장 완료 - 세션 코드: {}", sessionCode);
+
+        ApiResponse<String> response = new ApiResponse<>(
+                "SUCCESS",
+                "메모가 성공적으로 저장되었습니다.",
+                null
         );
 
         return ResponseEntity.ok(response);
