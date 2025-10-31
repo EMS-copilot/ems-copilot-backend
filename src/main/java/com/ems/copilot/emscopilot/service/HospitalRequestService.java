@@ -34,6 +34,7 @@ public class HospitalRequestService {
     private final SessionStorageService storageService;
     private final ObjectMapper objectMapper;
     private final com.ems.copilot.emscopilot.repository.UserRepository userRepository;
+    private final HospitalService hospitalService;
 
     /**
      * 선택한 병원들에게 환자 정보 전송
@@ -176,6 +177,10 @@ public class HospitalRequestService {
                 savedRequest.getId(),
                 savedRequest.getHospital().getName(),
                 savedRequest.getStatus());
+
+        // 5. 병원 랭킹 재계산 (비동기)
+        hospitalService.calculateRankAsync(hospitalId);
+        log.info("병원 랭킹 재계산 시작 (비동기) - 병원 ID: {}", hospitalId);
 
         return savedRequest;
     }
