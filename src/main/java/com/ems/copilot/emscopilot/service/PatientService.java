@@ -161,7 +161,7 @@ public class PatientService {
             // 추천 병원 객체 생성
             PatientRegistrationResponse.RecommendedHospital recommendedHospital =
                     PatientRegistrationResponse.RecommendedHospital.builder()
-                            .hospitalId(prediction.getHospitalId())
+                            .hospitalId(hospital.getId())
                             .hospitalName(hospital.getName())
                             .aiScore(prediction.getScoreValue())
                             .priority(priority++)

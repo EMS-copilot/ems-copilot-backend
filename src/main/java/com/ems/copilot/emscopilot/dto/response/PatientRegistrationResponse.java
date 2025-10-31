@@ -35,7 +35,7 @@ public class PatientRegistrationResponse {
     public static class RecommendedHospital {
 
         // 병원 식별
-        private String hospitalId; // "CBH_001"
+        private Long hospitalId; // DB의 병원 ID (Long)
         private String hospitalName;
 
         // AI 분석
