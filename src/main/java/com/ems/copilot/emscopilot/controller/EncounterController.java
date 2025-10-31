@@ -192,4 +192,30 @@ public class EncounterController {
 
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 병원이 받은 이송 내역 조회 (전체)
+     *
+     * GET /api/encounters/hospital-encounters
+     */
+    @GetMapping("/hospital-encounters")
+    @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
+    public ResponseEntity<ApiResponse<List<EncounterResponse>>> getHospitalEncounters(
+            Authentication authentication) {
+
+        log.info("==== 병원 이송 내역 조회 ====");
+
+        String employeeNumber = authentication.getName();
+        List<EncounterResponse> data = encounterService.getHospitalEncounters(employeeNumber);
+
+        log.info("이송 내역 조회 완료 - 총 {}개", data.size());
+
+        ApiResponse<List<EncounterResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "이송 내역을 성공적으로 조회했습니다.",
+                data
+        );
+
+        return ResponseEntity.ok(response);
+    }
 }

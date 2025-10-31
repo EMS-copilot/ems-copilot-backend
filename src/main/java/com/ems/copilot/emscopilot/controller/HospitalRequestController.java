@@ -215,6 +215,7 @@ public class HospitalRequestController {
 
     /**
      * 본인 병원이 받은 요청 목록 조회 (전체)
+     * 바이탈 정보 포함 (Redis 조회)
      *
      * GET /api/hospital-requests/hospital
      */
@@ -223,15 +224,10 @@ public class HospitalRequestController {
     public ResponseEntity<ApiResponse<List<HospitalRequestResponse>>> getHospitalRequests(
             Authentication authentication) {
 
-        log.info("==== 병원 요청 목록 조회 ====");
+        log.info("==== 병원 요청 목록 조회 (바이탈 정보 포함) ====");
 
         String employeeNumber = authentication.getName();
-        List<HospitalRequest> requests = transferRequestService.getHospitalRequests(employeeNumber);
-
-        // Entity -> DTO 변환
-        List<HospitalRequestResponse> data = requests.stream()
-                .map(HospitalRequestResponse::from)
-                .toList();
+        List<HospitalRequestResponse> data = transferRequestService.getHospitalRequestsWithVital(employeeNumber);
 
         log.info("병원 요청 목록 조회 완료 - 총 {}개", data.size());
 
@@ -246,8 +242,9 @@ public class HospitalRequestController {
 
     /**
      * 본인 병원이 받은 요청 목록 조회 (상태별)
+     * 바이탈 정보 포함 (Redis 조회)
      *
-     * GET /api/status?status=PENDING
+     * GET /api/hospital-requests/hospital/status?status=PENDING
      */
     @GetMapping("/hospital/status")
     @PreAuthorize("hasAnyRole('HOSPITAL_STAFF', 'HOSPITAL_ADMIN')")
@@ -255,16 +252,11 @@ public class HospitalRequestController {
             @RequestParam RequestStatus status,
             Authentication authentication) {
 
-        log.info("==== 병원 요청 목록 조회 (상태별) ====");
+        log.info("==== 병원 요청 목록 조회 (상태별, 바이탈 정보 포함) ====");
         log.info("상태: {}", status);
 
         String employeeNumber = authentication.getName();
-        List<HospitalRequest> requests = transferRequestService.getHospitalRequestsByStatus(employeeNumber, status);
-
-        // Entity -> DTO 변환
-        List<HospitalRequestResponse> data = requests.stream()
-                .map(HospitalRequestResponse::from)
-                .toList();
+        List<HospitalRequestResponse> data = transferRequestService.getHospitalRequestsByStatusWithVital(employeeNumber, status);
 
         log.info("병원 요청 목록 조회 완료 - 상태: {}, 총 {}개", status, data.size());
 

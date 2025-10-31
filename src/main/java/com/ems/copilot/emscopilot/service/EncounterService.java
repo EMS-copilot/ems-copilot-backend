@@ -266,4 +266,42 @@ public class EncounterService {
                 })
                 .toList();
     }
+
+    /**
+     * 병원이 받은 모든 이송 내역 조회 (최신순)
+     *
+     * @param employeeNumber 병원 직원 사번
+     * @return EncounterResponse 목록 (증상 정보 포함)
+     */
+    @Transactional(readOnly = true)
+    public List<EncounterResponse> getHospitalEncounters(String employeeNumber) {
+        log.info("병원 이송 내역 조회 시작 - 사번: {}", employeeNumber);
+
+        User hospitalStaff = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        Hospital hospital = hospitalStaff.getHospital();
+        if (hospital == null) {
+            throw new CustomException(ErrorCode.USER_HAS_NO_HOSPITAL);
+        }
+
+        List<Encounter> encounters = encounterRepository.findByHospitalIdOrderByCreatedAtDesc(hospital.getId());
+
+        log.info("병원 이송 내역 조회 완료 - 병원: {}, 총 {}개", hospital.getName(), encounters.size());
+
+        // Entity -> DTO 변환 (증상 정보 포함)
+        return encounters.stream()
+                .map(encounter -> {
+                    // TransferSession에서 증상 정보 조회
+                    TransferSession session = transferSessionRepository.findBySessionCode(encounter.getSessionCode())
+                            .orElse(null);
+
+                    if (session != null) {
+                        return EncounterResponse.fromWithSession(encounter, session.getChiefComplaintList());
+                    } else {
+                        return EncounterResponse.from(encounter);
+                    }
+                })
+                .toList();
+    }
 }

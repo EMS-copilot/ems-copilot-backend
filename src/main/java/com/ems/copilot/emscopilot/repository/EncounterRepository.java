@@ -27,6 +27,11 @@ public interface EncounterRepository extends JpaRepository<Encounter, Long> {
     List<Encounter> findByHospitalId(Long hospitalId);
 
     /**
+     * 병원 ID로 Encounter 목록 조회 (최신순)
+     */
+    List<Encounter> findByHospitalIdOrderByCreatedAtDesc(Long hospitalId);
+
+    /**
      * 상태로 Encounter 목록 조회
      */
     List<Encounter> findByStatus(SessionStatus status);

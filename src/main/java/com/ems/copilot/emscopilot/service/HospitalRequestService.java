@@ -293,4 +293,69 @@ public class HospitalRequestService {
 
         return requests;
     }
+
+    /**
+     * 병원이 받은 모든 요청 조회 (바이탈 정보 포함)
+     *
+     * @param employeeNumber 병원 직원 사번
+     * @return 병원 요청 목록 (바이탈 정보 포함)
+     */
+    @Transactional(readOnly = true)
+    public List<com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse> getHospitalRequestsWithVital(String employeeNumber) {
+        log.info("병원 요청 목록 조회 시작 (바이탈 정보 포함) - 사번: {}", employeeNumber);
+
+        // 기본 요청 목록 조회
+        List<HospitalRequest> requests = getHospitalRequests(employeeNumber);
+
+        // 각 요청에 대해 Redis에서 바이탈 정보 조회
+        List<com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse> responses = requests.stream()
+                .map(request -> {
+                    // Redis에서 바이탈 데이터 조회 (없을 수 있음)
+                    PatientVitalData vitalData = storageService.getVitalData(request.getSessionCode()).orElse(null);
+
+                    if (vitalData == null) {
+                        log.debug("바이탈 정보 없음 (만료 또는 삭제됨) - 세션 코드: {}", request.getSessionCode());
+                    }
+
+                    return com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse.from(request, vitalData);
+                })
+                .toList();
+
+        log.info("병원 요청 목록 조회 완료 (바이탈 정보 포함) - 총 {}개", responses.size());
+
+        return responses;
+    }
+
+    /**
+     * 병원이 받은 요청 중 특정 상태의 요청 조회 (바이탈 정보 포함)
+     *
+     * @param employeeNumber 병원 직원 사번
+     * @param status 요청 상태
+     * @return 병원 요청 목록 (바이탈 정보 포함)
+     */
+    @Transactional(readOnly = true)
+    public List<com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse> getHospitalRequestsByStatusWithVital(String employeeNumber, RequestStatus status) {
+        log.info("병원 요청 목록 조회 시작 (상태별, 바이탈 정보 포함) - 사번: {}, 상태: {}", employeeNumber, status);
+
+        // 기본 요청 목록 조회
+        List<HospitalRequest> requests = getHospitalRequestsByStatus(employeeNumber, status);
+
+        // 각 요청에 대해 Redis에서 바이탈 정보 조회
+        List<com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse> responses = requests.stream()
+                .map(request -> {
+                    // Redis에서 바이탈 데이터 조회 (없을 수 있음)
+                    PatientVitalData vitalData = storageService.getVitalData(request.getSessionCode()).orElse(null);
+
+                    if (vitalData == null) {
+                        log.debug("바이탈 정보 없음 (만료 또는 삭제됨) - 세션 코드: {}", request.getSessionCode());
+                    }
+
+                    return com.ems.copilot.emscopilot.dto.response.HospitalRequestResponse.from(request, vitalData);
+                })
+                .toList();
+
+        log.info("병원 요청 목록 조회 완료 (상태별, 바이탈 정보 포함) - 상태: {}, 총 {}개", status, responses.size());
+
+        return responses;
+    }
 }
