@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
  * - deleteById(id): 삭제
  * - count(): 전체 개수
  *
- * TTL(Time To Live) 30분 후 자동 삭제됨 (PatientVitalData의 @RedisHash 설정)
+ * TTL(Time To Live) 3일 후 자동 삭제됨 (PatientVitalData의 @RedisHash 설정)
  */
 @Repository
 public interface PatientVitalRepository extends CrudRepository<PatientVitalData, String> {
